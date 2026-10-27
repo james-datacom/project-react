@@ -11,7 +11,7 @@ import pageSource from './ProteinCalculatorPage.tsx?raw'
 import { ProteinCalculatorPage, ProteinResultCard } from './ProteinCalculatorPage.tsx'
 
 describe('ProteinCalculatorPage', () => {
-  it('shows kg, field messages, and a disabled Calculate button on first paint', () => {
+  it('shows kg and a disabled Calculate button without errors for empty fields', () => {
     const html = renderToStaticMarkup(<ProteinCalculatorPage />)
     const errors = proteinFieldErrors(initialProteinForm)
 
@@ -20,10 +20,15 @@ describe('ProteinCalculatorPage', () => {
     expect(html).toContain('disabled=""')
     expect(html).not.toContain('calculator-result')
     expect(html).not.toContain(proteinDisclaimer)
-    for (const message of Object.values(errors)) {
-      expect(html).toContain(message)
-    }
-    expect(html.match(/aria-invalid="true"/g)).toHaveLength(5)
+    expect(html).not.toContain('calculator-error')
+    expect(html).not.toContain('aria-invalid')
+    expect(Object.values(errors).every((message) => message === '')).toBe(true)
+    expect(
+      proteinFieldErrors({ ...initialProteinForm, weight: '0', age: '17' }),
+    ).toMatchObject({
+      weight: 'Enter a body weight greater than 0.',
+      age: 'Enter an age from 18 to 100.',
+    })
   })
 
   it('renders the result card from a client-side calculation and clears back to the empty form', () => {

@@ -111,6 +111,7 @@ a {
 .shell-body {
   grid-column: 2;
   grid-row: 2;
+  min-width: 0;
   min-height: 0;
   overflow-y: auto;
   padding: 1.5rem;
@@ -125,9 +126,13 @@ a {
 
 .page-title {
   margin: 0;
+  min-width: 0;
+  overflow: hidden;
   font-size: 1.125rem;
   font-weight: 650;
   line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .menu-button {
@@ -392,13 +397,18 @@ button.nav-link {
 
 .calculator {
   width: min(100%, 36rem);
+  max-width: 100%;
+  min-width: 0;
   justify-items: stretch;
 }
 
 .calculator-title {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
+  margin: 0;
+  min-width: 0;
 }
 
 .calculator-icon {
@@ -418,6 +428,10 @@ button.nav-link {
   gap: 0.9rem;
 }
 
+.calculator-field {
+  min-width: 0;
+}
+
 .calculator-field label {
   font-weight: 600;
 }
@@ -425,11 +439,14 @@ button.nav-link {
 .calculator-field input,
 .calculator-field select {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   padding: 0.5rem 0.65rem;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--page);
   color: var(--text);
+  font: inherit;
 }
 
 .calculator-error {
@@ -481,6 +498,7 @@ button.nav-link {
 
 .calculator-disclaimer {
   color: var(--muted);
+  overflow-wrap: anywhere;
 }
 
 .backdrop {
@@ -495,6 +513,29 @@ button.nav-link {
   .header,
   .shell-body {
     grid-column: 1;
+  }
+
+  .header {
+    padding-inline: 0.75rem;
+  }
+
+  .shell-body {
+    padding: 0.75rem;
+  }
+
+  .panel {
+    padding: 1rem;
+  }
+
+  .calculator-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .calculator-submit,
+  .calculator-reset {
+    width: 100%;
+    min-height: 2.75rem;
   }
 
   .menu-button {

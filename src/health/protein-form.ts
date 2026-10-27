@@ -28,28 +28,38 @@ export const initialProteinForm: ProteinForm = {
 }
 
 export function proteinFieldErrors(form: ProteinForm) {
-  const weight = Number(form.weight)
-  const age = Number(form.age)
+  const weightText = form.weight.trim()
+  const ageText = form.age.trim()
+  const weight = Number(weightText)
+  const age = Number(ageText)
 
   return {
     weight:
-      form.weight.trim() === '' || !Number.isFinite(weight) || weight <= 0
+      weightText !== '' && (!Number.isFinite(weight) || weight <= 0)
         ? 'Enter a body weight greater than 0.'
         : '',
     age:
-      !/^\d+$/.test(form.age.trim()) || age < 18 || age > 100
+      ageText !== '' && (!/^\d+$/.test(ageText) || age < 18 || age > 100)
         ? 'Enter an age from 18 to 100.'
         : '',
-    sex: form.sex === '' ? 'Select a sex.' : '',
-    activity: form.activity === '' ? 'Select an activity level.' : '',
-    goal: form.goal === '' ? 'Select a goal.' : '',
+    sex: '',
+    activity: '',
+    goal: '',
   }
 }
 
 export function toProteinInput(form: ProteinForm): ProteinInput | null {
-  const errors = proteinFieldErrors(form)
-  if (Object.values(errors).some(Boolean)) return null
-  if (form.sex === '' || form.activity === '' || form.goal === '') return null
+  if (
+    form.weight.trim() === '' ||
+    form.age.trim() === '' ||
+    form.sex === '' ||
+    form.activity === '' ||
+    form.goal === ''
+  ) {
+    return null
+  }
+
+  if (Object.values(proteinFieldErrors(form)).some(Boolean)) return null
 
   return {
     weight: Number(form.weight),

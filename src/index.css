@@ -1,21 +1,36 @@
 :root {
-  --page: #f6f6f4;
-  --surface: #ffffff;
-  --text: #1a1a1a;
-  --muted: #6b6b6b;
-  --border: #e4e4e4;
+  --page: #111113;
+  --surface: #1c1c1f;
+  --text: #f5f5f4;
+  --muted: #c4c4c8;
+  --border: #3f3f46;
   --accent: #3b5bdb;
+  --accent-text: #c5d0ff;
+  --accent-soft: color-mix(in srgb, #8ea2ff 22%, var(--surface));
+  --hover: #2c2c32;
   --shell-sidebar: 240px;
   --shell-break: 48rem;
   --header-height: 4rem;
 
-  color-scheme: light;
+  color-scheme: dark;
   font: 16px/1.45 system-ui, 'Segoe UI', Roboto, sans-serif;
   color: var(--text);
   background: var(--page);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+}
+
+:root[data-theme='light'] {
+  --page: #f6f6f4;
+  --surface: #ffffff;
+  --text: #1a1a1a;
+  --muted: #6b6b6b;
+  --border: #e4e4e4;
+  --accent-text: var(--accent);
+  --accent-soft: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  --hover: var(--page);
+  color-scheme: light;
 }
 
 *,
@@ -41,7 +56,7 @@ a {
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent-text);
   outline-offset: 2px;
 }
 
@@ -178,8 +193,8 @@ a {
 }
 
 .nav-link[aria-current='page'] {
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  color: var(--accent-text);
+  background: var(--accent-soft);
 }
 
 .nav-icon {
@@ -240,15 +255,29 @@ a {
   top: calc(100% + 0.5rem);
   right: 0;
   z-index: 4;
-  min-width: 12rem;
+  min-width: 15.5rem;
   padding: 0.25rem;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--surface);
 }
 
+.menu-branch {
+  position: relative;
+}
+
+.menu-sub {
+  top: -0.25rem;
+  right: calc(100% - 1px);
+  left: auto;
+  min-width: 12.5rem;
+  z-index: 1;
+}
+
 .menu-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
   width: 100%;
   padding: 0.55rem 0.75rem;
   border: 0;
@@ -257,11 +286,43 @@ a {
   color: var(--text);
   text-align: left;
   text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
 }
 
+.menu-item-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-left: auto;
+  color: var(--muted);
+}
+
+.menu-glyph {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.menu-check {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+  color: var(--accent-text);
+}
+
+.menu-chevron {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
 .menu-item:hover {
-  background: var(--page);
+  background: var(--hover);
 }
 
 .panel {
@@ -330,5 +391,10 @@ a {
     border: 0;
     background: rgb(26 26 26 / 40%);
     cursor: pointer;
+  }
+
+  .menu-sub {
+    top: calc(100% - 1px);
+    right: 0;
   }
 }

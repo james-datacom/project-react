@@ -5,6 +5,7 @@
   --muted: #c4c4c8;
   --border: #3f3f46;
   --accent: #3b5bdb;
+  --danger: #ffb4b4;
   --accent-text: #c5d0ff;
   --accent-soft: color-mix(in srgb, #8ea2ff 22%, var(--surface));
   --hover: #2c2c32;
@@ -30,6 +31,7 @@
   --accent-text: var(--accent);
   --accent-soft: color-mix(in srgb, var(--accent) 12%, var(--surface));
   --hover: var(--page);
+  --danger: #9f1239;
   color-scheme: light;
 }
 
@@ -197,10 +199,52 @@ a {
   background: var(--accent-soft);
 }
 
+button.nav-link {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+
 .nav-icon {
   width: 1.25rem;
   height: 1.25rem;
-  fill: currentColor;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  transition: transform 150ms ease;
+}
+
+.nav-link:hover .nav-icon {
+  transform: scale(1.08);
+}
+
+.nav-chevron {
+  width: 1rem;
+  height: 1rem;
+  margin-left: auto;
+  flex: none;
+  transform: rotate(-90deg);
+  transition: transform 150ms ease;
+}
+
+.nav-group[aria-expanded='true'] .nav-chevron {
+  transform: rotate(0deg);
+}
+
+.nav-children {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav-child {
+  padding-left: 2.25rem;
 }
 
 .account-row {
@@ -343,6 +387,99 @@ a {
 
 .panel-copy,
 .account-email {
+  color: var(--muted);
+}
+
+.calculator {
+  width: min(100%, 36rem);
+  justify-items: stretch;
+}
+
+.calculator-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.calculator-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: none;
+}
+
+.calculator-form,
+.calculator-field,
+.calculator-result {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.calculator-form {
+  gap: 0.9rem;
+}
+
+.calculator-field label {
+  font-weight: 600;
+}
+
+.calculator-field input,
+.calculator-field select {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--page);
+  color: var(--text);
+}
+
+.calculator-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.875rem;
+}
+
+.calculator-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.calculator-submit,
+.calculator-reset {
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.calculator-submit {
+  border: 0;
+  background: var(--accent);
+  color: #fff;
+}
+
+.calculator-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.calculator-reset {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+}
+
+.calculator-result {
+  gap: 0.35rem;
+  margin: 0;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+}
+
+.calculator-result p {
+  margin: 0;
+}
+
+.calculator-disclaimer {
   color: var(--muted);
 }
 

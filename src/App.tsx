@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router'
 import { AccountPage } from './pages/AccountPage.tsx'
 import { EmptyDestinationPage } from './pages/EmptyDestinationPage.tsx'
 import { HomePage } from './pages/HomePage.tsx'
+import { ProteinCalculatorPage } from './pages/ProteinCalculatorPage.tsx'
 import { AppShell } from './shell/AppShell.tsx'
 
 export default function App() {
@@ -12,6 +13,7 @@ export default function App() {
         <Route path="projects" element={<EmptyDestinationPage />} />
         <Route path="settings" element={<EmptyDestinationPage />} />
         <Route path="account" element={<AccountPage />} />
+        <Route path="health/protein-calculator" element={<ProteinCalculatorPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

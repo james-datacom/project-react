@@ -6,6 +6,7 @@ const titles: Record<string, string> = {
   '/projects': 'Projects',
   '/settings': 'Settings',
   '/account': 'Account settings',
+  '/health/protein-calculator': 'Protein Calculator',
 }
 
 type HeaderProps = {

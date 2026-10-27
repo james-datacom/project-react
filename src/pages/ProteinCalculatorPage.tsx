@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Calculator } from 'lucide-react'
 import {
   activityOptions,
@@ -16,11 +16,23 @@ import {
 } from '../health/protein-form.ts'
 import { calculateProtein, type ProteinResult } from '../health/protein.ts'
 
+const narrowQuery = '(max-width: 48rem)'
+
 export function ProteinCalculatorPage() {
   const [form, setForm] = useState(initialProteinForm)
   const [result, setResult] = useState<ProteinResult | null>(null)
+  const resultRef = useRef<HTMLDivElement>(null)
   const errors = proteinFieldErrors(form)
   const canCalculate = toProteinInput(form) !== null
+
+  useEffect(() => {
+    if (!result || !window.matchMedia(narrowQuery).matches) return
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    resultRef.current?.scrollIntoView({
+      behavior: reduceMotion ? 'auto' : 'smooth',
+      block: 'end',
+    })
+  }, [result])
 
   function update<Key extends keyof ProteinForm>(key: Key, value: ProteinForm[Key]) {
     setForm((current) => ({ ...current, [key]: value }))
@@ -145,7 +157,11 @@ export function ProteinCalculatorPage() {
           </button>
         </div>
       </form>
-      {result ? <ProteinResultCard result={result} /> : null}
+      {result ? (
+        <div ref={resultRef}>
+          <ProteinResultCard result={result} />
+        </div>
+      ) : null}
     </section>
   )
 }

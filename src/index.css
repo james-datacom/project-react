@@ -490,6 +490,7 @@ button.nav-link {
   margin: 0;
   padding-top: 0.9rem;
   border-top: 1px solid var(--border);
+  scroll-margin-bottom: 1rem;
 }
 
 .calculator-result p {

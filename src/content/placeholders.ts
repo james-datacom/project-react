@@ -1,6 +1,6 @@
 export const product = {
-  name: 'Project React',
-  monogram: 'PR',
+  name: 'James App',
+  monogram: 'JA',
   description: 'A shared place for the first layout.',
 }
 
@@ -9,8 +9,8 @@ export const account: {
   email: string
   imageUrl: string | null
 } = {
-  name: 'Alex Rivera',
-  email: 'alex@example.com',
+  name: 'James Cabral',
+  email: 'james.cabral@example.com',
   imageUrl: null,
 }
 

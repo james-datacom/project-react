@@ -1,0 +1,5 @@
+# Optional. Copy this file to terraform.tfvars to override the defaults.
+# terraform.tfvars is gitignored. Apply works without that file.
+
+project_name = "react-app"
+environment  = "development"

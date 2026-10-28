@@ -24,3 +24,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Terraform local state and variable files. Keep .terraform.lock.hcl.
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+terraform/generated-project.txt

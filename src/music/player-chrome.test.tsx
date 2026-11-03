@@ -83,16 +83,16 @@ describe('player chrome', () => {
       </MusicProvider>,
     )
     expect(playing).toContain('Open now playing')
-    expect(playing).toContain('>Pause<')
-    expect(playing).toContain('Shuffle off')
-    expect(playing).toContain('Previous')
-    expect(playing).toContain('Next')
+    expect(playing).toContain('aria-label="Pause"')
+    expect(playing).toContain('aria-label="Shuffle off"')
+    expect(playing).toContain('aria-label="Previous"')
+    expect(playing).toContain('aria-label="Next"')
     const surface = playing.slice(playing.indexOf('aria-label="Now playing"'))
-    expect(playing).toContain('Repeat off')
-    expect(surface.indexOf('Shuffle off')).toBeLessThan(surface.indexOf('>Previous<'))
-    expect(surface.indexOf('>Previous<')).toBeLessThan(surface.indexOf('>Pause<'))
-    expect(surface.indexOf('>Pause<')).toBeLessThan(surface.indexOf('>Next<'))
-    expect(surface.indexOf('>Next<')).toBeLessThan(surface.indexOf('Repeat off'))
+    expect(playing).toContain('aria-label="Repeat off"')
+    expect(surface.indexOf('aria-label="Shuffle off"')).toBeLessThan(surface.indexOf('aria-label="Previous"'))
+    expect(surface.indexOf('aria-label="Previous"')).toBeLessThan(surface.indexOf('aria-label="Pause"'))
+    expect(surface.indexOf('aria-label="Pause"')).toBeLessThan(surface.indexOf('aria-label="Next"'))
+    expect(surface.indexOf('aria-label="Next"')).toBeLessThan(surface.indexOf('aria-label="Repeat off"'))
     expect(playing).toContain('FI')
     expect(playing).not.toContain('i.ytimg.com')
     expect(playing).not.toContain('img.youtube.com')
@@ -104,8 +104,8 @@ describe('player chrome', () => {
         <MiniPlayer wideMusic={false} />
       </MusicProvider>,
     )
-    expect(paused).toContain('>Play<')
-    expect(paused).not.toContain('>Pause<')
+    expect(paused).toContain('aria-label="Play"')
+    expect(paused).not.toContain('aria-label="Pause"')
   })
 
   it('lists the tail of the queue under Next', () => {

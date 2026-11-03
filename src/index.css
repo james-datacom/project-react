@@ -613,13 +613,11 @@ button.nav-link {
   left: var(--shell-sidebar);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.65rem;
   min-width: 0;
-  min-height: 4rem;
-  padding: 0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom));
-  border-top: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
+  min-height: 3.75rem;
+  padding: 0.45rem 0.65rem calc(0.45rem + env(safe-area-inset-bottom));
+  color: #fff;
 }
 
 .mini-player-progress {
@@ -627,7 +625,7 @@ button.nav-link {
   top: 0;
   left: 0;
   height: 2px;
-  background: var(--accent);
+  background: rgb(255 255 255 / 85%);
   pointer-events: none;
 }
 
@@ -661,23 +659,60 @@ button.nav-link {
   text-overflow: ellipsis;
 }
 
-.mini-player-playlist,
+.mini-player-title {
+  font-size: 0.95rem;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.mini-player-playlist {
+  color: rgb(255 255 255 / 72%);
+  font-size: 0.8rem;
+  line-height: 1.2;
+}
+
 .now-playing-playlist {
   color: var(--muted);
 }
 
-.mini-player-toggle,
-.transport button,
-.now-playing-close,
-.up-next,
-.queue-sheet button {
+.icon-button,
+.up-next {
+  display: inline-grid;
+  place-items: center;
   min-width: 2.75rem;
   min-height: 2.75rem;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
-  color: var(--text);
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
   cursor: pointer;
+}
+
+.player-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  fill: none;
+  stroke: currentColor;
+}
+
+.mini-player-toggle .player-icon,
+.transport-play .player-icon {
+  fill: currentColor;
+}
+
+.player-icon-lg {
+  width: 1.65rem;
+  height: 1.65rem;
+}
+
+.mini-player-toggle {
+  color: #fff;
+}
+
+.transport button.is-on,
+.icon-button.is-on {
+  color: var(--accent-text);
 }
 
 .cover-tile {
@@ -689,9 +724,11 @@ button.nav-link {
 }
 
 .cover-tile-sm {
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 2.5rem;
+  height: 2.5rem;
   flex: none;
+  border-radius: 4px;
+  font-size: 0.8rem;
 }
 
 .cover-tile-lg {
@@ -769,6 +806,8 @@ button.nav-link {
 .transport button.transport-play {
   min-width: 3.5rem;
   min-height: 3.5rem;
+  background: var(--text);
+  color: var(--surface);
 }
 
 .up-next {

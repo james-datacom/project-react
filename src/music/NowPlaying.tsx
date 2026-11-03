@@ -1,3 +1,4 @@
+import { ChevronDown, Pause, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react'
 import { useRef, type PointerEvent } from 'react'
 import { coverFromTitle } from './cover.ts'
 import { QueueSheet } from './QueueSheet.tsx'
@@ -50,8 +51,8 @@ export function NowPlaying({ presentation }: { presentation: 'sheet' | 'column' 
       onPointerUp={onPointerUp}
     >
       {presentation === 'sheet' ? (
-        <button type="button" className="now-playing-close" onClick={closeSheet}>
-          Close
+        <button type="button" className="now-playing-close icon-button" aria-label="Close" onClick={closeSheet}>
+          <ChevronDown className="player-icon" />
         </button>
       ) : null}
       <div className="cover-tile cover-tile-lg" style={{ background: cover.color }} aria-hidden="true">
@@ -74,20 +75,37 @@ export function NowPlaying({ presentation }: { presentation: 'sheet' | 'column' 
       </div>
       <div className="transport">
         <div className="transport-main">
-          <button type="button" onClick={music.toggleShuffle}>
-            Shuffle {music.shuffle ? 'on' : 'off'}
+          <button
+            type="button"
+            className={music.shuffle ? 'icon-button is-on' : 'icon-button'}
+            aria-label={music.shuffle ? 'Shuffle on' : 'Shuffle off'}
+            aria-pressed={music.shuffle}
+            onClick={music.toggleShuffle}
+          >
+            <Shuffle className="player-icon" />
           </button>
-          <button type="button" onClick={music.goPrevious}>
-            Previous
+          <button type="button" className="icon-button" aria-label="Previous" onClick={music.goPrevious}>
+            <SkipBack className="player-icon" />
           </button>
-          <button type="button" className="transport-play" onClick={music.togglePlay}>
-            {session.paused ? 'Play' : 'Pause'}
+          <button
+            type="button"
+            className="icon-button transport-play"
+            aria-label={session.paused ? 'Play' : 'Pause'}
+            onClick={music.togglePlay}
+          >
+            {session.paused ? <Play className="player-icon player-icon-lg" /> : <Pause className="player-icon player-icon-lg" />}
           </button>
-          <button type="button" onClick={music.goNext}>
-            Next
+          <button type="button" className="icon-button" aria-label="Next" onClick={music.goNext}>
+            <SkipForward className="player-icon" />
           </button>
-          <button type="button" onClick={music.cycleRepeatMode}>
-            Repeat {music.repeat}
+          <button
+            type="button"
+            className={music.repeat === 'off' ? 'icon-button' : 'icon-button is-on'}
+            aria-label={`Repeat ${music.repeat}`}
+            aria-pressed={music.repeat !== 'off'}
+            onClick={music.cycleRepeatMode}
+          >
+            {music.repeat === 'one' ? <Repeat1 className="player-icon" /> : <Repeat className="player-icon" />}
           </button>
         </div>
         <div className="transport-volume">
@@ -100,8 +118,14 @@ export function NowPlaying({ presentation }: { presentation: 'sheet' | 'column' 
             value={music.volume}
             onChange={(event) => music.setVolume(Number(event.target.value))}
           />
-          <button type="button" onClick={music.toggleMute}>
-            {music.muted ? 'Unmute' : 'Mute'}
+          <button
+            type="button"
+            className="icon-button"
+            aria-label={music.muted ? 'Unmute' : 'Mute'}
+            aria-pressed={music.muted}
+            onClick={music.toggleMute}
+          >
+            {music.muted ? <VolumeX className="player-icon" /> : <Volume2 className="player-icon" />}
           </button>
         </div>
       </div>

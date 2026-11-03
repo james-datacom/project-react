@@ -1,3 +1,4 @@
+import { X } from 'lucide-react'
 import { useEffect } from 'react'
 import { useMusic } from './MusicProvider.tsx'
 
@@ -28,8 +29,8 @@ export function QueueSheet() {
     <div id="up-next-sheet" className="queue-sheet" role="dialog" aria-labelledby="up-next-title">
       <div className="queue-sheet-bar">
         <h2 id="up-next-title">Up next</h2>
-        <button type="button" onClick={() => music.closeQueue()}>
-          Close
+        <button type="button" className="icon-button" aria-label="Close" onClick={() => music.closeQueue()}>
+          <X className="player-icon" />
         </button>
       </div>
       <div className="queue-list">

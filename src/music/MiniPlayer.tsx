@@ -1,3 +1,4 @@
+import { Pause, Play } from 'lucide-react'
 import { coverFromTitle } from './cover.ts'
 import { useMusic } from './MusicProvider.tsx'
 
@@ -21,7 +22,10 @@ export function MiniPlayer({ wideMusic }: { wideMusic: boolean }) {
   }
 
   return (
-    <div className="mini-player">
+    <div
+      className="mini-player"
+      style={{ background: `color-mix(in srgb, ${cover.color} 68%, #140810)` }}
+    >
       <div className="mini-player-progress" aria-hidden="true" style={{ width: `${progress}%` }} />
       <button type="button" id="mini-player-open" className="mini-player-open" onClick={openNowPlaying}>
         <span className="cover-tile cover-tile-sm" style={{ background: cover.color }} aria-hidden="true">
@@ -33,8 +37,13 @@ export function MiniPlayer({ wideMusic }: { wideMusic: boolean }) {
         </span>
         <span className="visually-hidden">Open now playing</span>
       </button>
-      <button type="button" className="mini-player-toggle" onClick={() => music.togglePlay()}>
-        {playing ? 'Pause' : 'Play'}
+      <button
+        type="button"
+        className="mini-player-toggle icon-button"
+        aria-label={playing ? 'Pause' : 'Play'}
+        onClick={() => music.togglePlay()}
+      >
+        {playing ? <Pause className="player-icon" /> : <Play className="player-icon" />}
       </button>
     </div>
   )

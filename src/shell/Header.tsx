@@ -1,4 +1,5 @@
 import { useLocation } from 'react-router'
+import { musicPath } from '../music/paths.ts'
 import { ProfileMenu } from './ProfileMenu.tsx'
 
 const titles: Record<string, string> = {
@@ -7,6 +8,7 @@ const titles: Record<string, string> = {
   '/settings': 'Settings',
   '/account': 'Account settings',
   '/health/protein-calculator': 'Protein Calculator',
+  [musicPath]: 'Music',
 }
 
 type HeaderProps = {

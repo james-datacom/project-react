@@ -7,6 +7,7 @@ import { ThemeProvider } from '../theme/ThemeProvider.tsx'
 import shellSource from './AppShell.tsx?raw'
 import { Header } from './Header.tsx'
 import { Sidebar } from './Sidebar.tsx'
+import sidebarSource from './Sidebar.tsx?raw'
 
 function sidebar(path: string) {
   return renderToStaticMarkup(
@@ -21,16 +22,22 @@ describe('Sidebar health menu', () => {
     const html = sidebar('/')
     const home = html.indexOf('>Home<')
     const health = html.indexOf('>Health<')
+    const entertainment = html.indexOf('>Entertainment<')
     const projects = html.indexOf('>Projects<')
     const settings = html.indexOf('>Settings<')
 
     expect(home).toBeGreaterThan(-1)
     expect(home).toBeLessThan(health)
-    expect(health).toBeLessThan(projects)
+    expect(health).toBeLessThan(entertainment)
+    expect(entertainment).toBeLessThan(projects)
     expect(projects).toBeLessThan(settings)
     expect(html).toContain('aria-expanded="false"')
     expect(html).not.toContain('Protein Calculator')
+    expect(html).not.toContain('>Music<')
     expect(html).toContain('nav-icon')
+    const entertainmentAt = html.indexOf('>Entertainment<')
+    const entertainmentControl = html.slice(0, entertainmentAt)
+    expect(entertainmentControl.lastIndexOf('<button')).toBeGreaterThan(entertainmentControl.lastIndexOf('<a '))
   })
 
   it('opens Protein Calculator as the selected child and titles the header', () => {
@@ -61,5 +68,34 @@ describe('Sidebar health menu', () => {
     expect(shellSource).toContain('hidden={narrow && !sidebarOpen}')
     expect(mainSource).toContain('BrowserRouter')
     expect(mainSource).not.toContain('HashRouter')
+  })
+
+  it('adds Entertainment between Health and Projects and opens Music from that child', () => {
+    const collapsed = sidebar('/')
+    const expanded = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/']}>
+        <Sidebar hidden={false} initialEntertainmentOpen />
+      </MemoryRouter>,
+    )
+    const music = sidebar('/entertainment/music')
+    const header = renderToStaticMarkup(
+      <ThemeProvider>
+        <MemoryRouter initialEntries={['/entertainment/music']}>
+          <Header menuOpen={false} showMenuButton={false} onMenuToggle={() => {}} />
+        </MemoryRouter>
+      </ThemeProvider>,
+    )
+
+    expect(collapsed).not.toContain('>Music<')
+    expect(collapsed).toContain('aria-expanded="false"')
+    expect(expanded).toContain('>Music<')
+    expect(expanded).toContain('href="/entertainment/music"')
+    expect(expanded).toContain('nav-child')
+    expect(music).toContain('aria-expanded="true"')
+    expect(music).toContain('aria-current="page"')
+    expect(header).toContain('Music')
+    expect(sidebarSource).toContain('setMusicOpen((open) => !open)')
+    expect(sidebarSource).toContain('if (musicForced) return')
+    expect(sidebarSource).not.toContain('HashRouter')
   })
 })

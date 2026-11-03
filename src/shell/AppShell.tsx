@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router'
+import { MusicProvider, useMusic } from '../music/MusicProvider.tsx'
+import { PlayerBar } from '../music/PlayerBar.tsx'
+import { musicPath } from '../music/paths.ts'
 import { Header } from './Header.tsx'
 import { Sidebar } from './Sidebar.tsx'
 
@@ -40,24 +43,51 @@ export function AppShell() {
   const overlayOpen = narrow && sidebarOpen
 
   return (
-    <div className="shell" data-sidebar-open={overlayOpen ? 'true' : 'false'}>
+    <MusicProvider>
+      <ShellFrame
+        overlayOpen={overlayOpen}
+        narrow={narrow}
+        sidebarOpen={sidebarOpen}
+        onMenuToggle={() => setSidebarOpen((open) => !open)}
+        onClose={() => setSidebarOpen(false)}
+      />
+    </MusicProvider>
+  )
+}
+
+function ShellFrame({
+  overlayOpen,
+  narrow,
+  sidebarOpen,
+  onMenuToggle,
+  onClose,
+}: {
+  overlayOpen: boolean
+  narrow: boolean
+  sidebarOpen: boolean
+  onMenuToggle: () => void
+  onClose: () => void
+}) {
+  const location = useLocation()
+  const { session } = useMusic()
+  const onMusic = location.pathname === musicPath
+  const showPlayer = onMusic || session !== null
+
+  return (
+    <div
+      className="shell"
+      data-sidebar-open={overlayOpen ? 'true' : 'false'}
+      data-player={showPlayer ? 'true' : 'false'}
+    >
       <Sidebar hidden={narrow && !sidebarOpen} />
       {overlayOpen ? (
-        <button
-          type="button"
-          className="backdrop"
-          aria-label="Close menu"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <button type="button" className="backdrop" aria-label="Close menu" onClick={onClose} />
       ) : null}
-      <Header
-        menuOpen={overlayOpen}
-        showMenuButton={narrow}
-        onMenuToggle={() => setSidebarOpen((open) => !open)}
-      />
+      <Header menuOpen={overlayOpen} showMenuButton={narrow} onMenuToggle={onMenuToggle} />
       <main className="shell-body">
         <Outlet />
       </main>
+      {showPlayer ? <PlayerBar compact={!onMusic} /> : null}
     </div>
   )
 }

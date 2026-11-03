@@ -2,33 +2,51 @@ import { useState } from 'react'
 import {
   Calculator,
   ChevronDown,
+  Clapperboard,
   Folder,
   HeartPulse,
   House,
+  Music,
   Settings,
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router'
 import { account, product } from '../content/placeholders.ts'
+import { musicPath } from '../music/paths.ts'
 import { ProfileAvatar } from './ProfileAvatar.tsx'
 
 export const proteinCalculatorPath = '/health/protein-calculator'
 
-export function Sidebar({ hidden }: { hidden: boolean }) {
+export function Sidebar({
+  hidden,
+  initialEntertainmentOpen = false,
+}: {
+  hidden: boolean
+  initialEntertainmentOpen?: boolean
+}) {
   const { pathname } = useLocation()
-  const forcedOpen = pathname === proteinCalculatorPath
-  const [userExpanded, setUserExpanded] = useState(false)
+  const healthForced = pathname === proteinCalculatorPath
+  const musicForced = pathname === musicPath
+  const [healthOpen, setHealthOpen] = useState(false)
+  const [musicOpen, setMusicOpen] = useState(initialEntertainmentOpen)
   const [trackedPath, setTrackedPath] = useState(pathname)
 
   if (trackedPath !== pathname) {
     setTrackedPath(pathname)
-    if (trackedPath === proteinCalculatorPath) setUserExpanded(false)
+    if (trackedPath === proteinCalculatorPath) setHealthOpen(false)
+    if (trackedPath === musicPath) setMusicOpen(false)
   }
 
-  const expanded = forcedOpen || userExpanded
+  const healthExpanded = healthForced || healthOpen
+  const musicExpanded = musicForced || musicOpen
 
   function toggleHealth() {
-    if (forcedOpen) return
-    setUserExpanded((open) => !open)
+    if (healthForced) return
+    setHealthOpen((open) => !open)
+  }
+
+  function toggleEntertainment() {
+    if (musicForced) return
+    setMusicOpen((open) => !open)
   }
 
   return (
@@ -51,19 +69,41 @@ export function Sidebar({ hidden }: { hidden: boolean }) {
             <button
               type="button"
               className="nav-link nav-group"
-              aria-expanded={expanded}
+              aria-expanded={healthExpanded}
               onClick={toggleHealth}
             >
               <HeartPulse className="nav-icon" aria-hidden="true" />
               <span>Health</span>
               <ChevronDown className="nav-chevron" aria-hidden="true" />
             </button>
-            {expanded ? (
+            {healthExpanded ? (
               <ul className="nav-children">
                 <li>
                   <NavLink to={proteinCalculatorPath} className="nav-link nav-child">
                     <Calculator className="nav-icon" aria-hidden="true" />
                     <span>Protein Calculator</span>
+                  </NavLink>
+                </li>
+              </ul>
+            ) : null}
+          </li>
+          <li>
+            <button
+              type="button"
+              className="nav-link nav-group"
+              aria-expanded={musicExpanded}
+              onClick={toggleEntertainment}
+            >
+              <Clapperboard className="nav-icon" aria-hidden="true" />
+              <span>Entertainment</span>
+              <ChevronDown className="nav-chevron" aria-hidden="true" />
+            </button>
+            {musicExpanded ? (
+              <ul className="nav-children">
+                <li>
+                  <NavLink to={musicPath} className="nav-link nav-child">
+                    <Music className="nav-icon" aria-hidden="true" />
+                    <span>Music</span>
                   </NavLink>
                 </li>
               </ul>

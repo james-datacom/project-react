@@ -798,6 +798,7 @@ button.nav-link {
   display: flex;
   flex: none;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   min-width: 0;
   overflow: hidden;

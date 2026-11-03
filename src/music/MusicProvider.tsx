@@ -11,6 +11,8 @@ import {
   cycleRepeat,
   endOfTrack,
   nextTrack,
+  orderForShuffle,
+  playAtIndex,
   previousTrack,
   skipUnavailable,
   startAtTrack,
@@ -22,7 +24,7 @@ import {
 import { loadLibrary, saveLibrary, type LibraryStorage } from './storage.ts'
 import type { PlayerHandle } from './youtube-player.ts'
 
-type Session = {
+export type Session = {
   playlistId: string
   trackIds: string[]
   index: number
@@ -48,6 +50,8 @@ type MusicContextValue = {
   duration: number
   unavailableIds: string[]
   command: PlaybackCommand | null
+  nowPlayingOpen: boolean
+  queueOpen: boolean
   selectPlaylist: (playlistId: string) => void
   createPlaylist: (name: string, description: string) => string | null
   updatePlaylist: (playlistId: string, name: string, description: string) => string | null
@@ -59,6 +63,11 @@ type MusicContextValue = {
   removeTrack: (playlistId: string, trackId: string) => void
   playPlaylist: (playlistId: string) => void
   playTrack: (playlistId: string, trackId: string) => void
+  playAt: (index: number) => void
+  openNowPlaying: () => void
+  closeNowPlaying: () => void
+  openQueue: () => void
+  closeQueue: () => void
   togglePlay: () => void
   pause: () => void
   goNext: () => void
@@ -97,9 +106,13 @@ function toQueue(session: Session): QueueState {
 export function MusicProvider({
   children,
   storage,
+  initialSession = null,
+  initialQueueOpen = false,
 }: {
   children: ReactNode
   storage?: LibraryStorage
+  initialSession?: Session | null
+  initialQueueOpen?: boolean
 }) {
   const resolvedStorage = storage ?? browserStorage()
   const storageRef = useRef(resolvedStorage)
@@ -107,7 +120,9 @@ export function MusicProvider({
   const [selectedId, setSelectedId] = useState<string | null>(
     () => loadLibrary(resolvedStorage).playlists[0]?.id ?? null,
   )
-  const [session, setSession] = useState<Session | null>(null)
+  const [session, setSession] = useState<Session | null>(initialSession)
+  const [nowPlayingOpen, setNowPlayingOpen] = useState(false)
+  const [queueOpen, setQueueOpen] = useState(initialQueueOpen)
   const [repeat, setRepeat] = useState<RepeatMode>('off')
   const [shuffle, setShuffle] = useState(false)
   const [volume, setVolumeState] = useState(100)
@@ -143,6 +158,13 @@ export function MusicProvider({
       videoId,
     }))
   }, [])
+
+  const clearPlayback = useCallback(() => {
+    setSession(null)
+    setNowPlayingOpen(false)
+    setQueueOpen(false)
+    issue('pause', '')
+  }, [issue])
 
   const commit = useCallback((next: Library) => {
     setLibrary(next)
@@ -228,6 +250,8 @@ export function MusicProvider({
       duration,
       unavailableIds,
       command,
+      nowPlayingOpen,
+      queueOpen,
       selectPlaylist: (playlistId) => setSelectedId(playlistId),
       createPlaylist: (name, description) => {
         const result = createPlaylistRecord(libraryRef.current, { name, description }, {
@@ -254,10 +278,7 @@ export function MusicProvider({
         const result = deletePlaylistRecord(libraryRef.current, playlistId)
         if (!result.ok) return
         commit(result.library)
-        if (sessionRef.current?.playlistId === playlistId) {
-          setSession(null)
-          issue('pause', '')
-        }
+        if (sessionRef.current?.playlistId === playlistId) clearPlayback()
         if (selectedRef.current === playlistId) {
           setSelectedId(result.library.playlists[0]?.id ?? null)
         }
@@ -286,8 +307,7 @@ export function MusicProvider({
         if (!current || current.playlistId !== playlistId) return
         const playlist = result.library.playlists.find((item) => item.id === playlistId)
         if (!playlist || playlist.tracks.length === 0) {
-          setSession(null)
-          issue('pause', '')
+          clearPlayback()
           return
         }
         const position = current.trackIds.indexOf(trackId)
@@ -347,6 +367,31 @@ export function MusicProvider({
         })
         issue('load', videoIdAt(libraryRef.current, playlistId, started.trackIds, started.index))
       },
+      playAt: (index) => {
+        const current = sessionRef.current
+        if (!current) return
+        const next = playAtIndex(toQueue(current), index)
+        if (!next) return
+        setSession({
+          ...current,
+          trackIds: next.trackIds,
+          index: next.index,
+          failedIds: next.failedIds,
+          paused: false,
+        })
+        issue('load', videoIdAt(libraryRef.current, current.playlistId, next.trackIds, next.index))
+      },
+      openNowPlaying: () => setNowPlayingOpen(true),
+      closeNowPlaying: () => {
+        setNowPlayingOpen(false)
+      },
+      openQueue: () => {
+        if (!sessionRef.current || sessionRef.current.trackIds.length === 0) return
+        setQueueOpen(true)
+      },
+      closeQueue: () => {
+        setQueueOpen(false)
+      },
       togglePlay: () => {
         const current = sessionRef.current
         if (!current) {
@@ -384,7 +429,22 @@ export function MusicProvider({
         applyResult(current.playlistId, previousTrack(toQueue(current)))
       },
       cycleRepeatMode: () => setRepeat((mode) => cycleRepeat(mode)),
-      toggleShuffle: () => setShuffle((value) => !value),
+      toggleShuffle: () => {
+        const nextShuffle = !shuffleRef.current
+        setShuffle(nextShuffle)
+        shuffleRef.current = nextShuffle
+        const current = sessionRef.current
+        if (!current) return
+        const playlist = libraryRef.current.playlists.find((item) => item.id === current.playlistId)
+        const savedIds = playlist?.tracks.map((track) => track.id) ?? current.trackIds
+        const ordered = orderForShuffle(toQueue(current), nextShuffle, savedIds, Math.random)
+        setSession({
+          ...current,
+          trackIds: ordered.trackIds,
+          index: ordered.index,
+          failedIds: ordered.failedIds,
+        })
+      },
       seek: (seconds) => {
         setCurrentTime(seconds)
         playerRef.current?.seekTo(seconds, true)
@@ -445,7 +505,7 @@ export function MusicProvider({
         )
       },
     }),
-    [applyResult, command, commit, currentTime, duration, issue, library, muted, playPlaylist, repeat, selectedId, session, shuffle, unavailableIds, volume],
+    [applyResult, clearPlayback, command, commit, currentTime, duration, issue, library, muted, nowPlayingOpen, playPlaylist, queueOpen, repeat, selectedId, session, shuffle, unavailableIds, volume],
   )
 
   return <MusicContext.Provider value={value}>{children}</MusicContext.Provider>

@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { NowPlaying } from '../music/NowPlaying.tsx'
 import { fetchYouTubeTitle } from '../music/oembed.ts'
 import { useMusic } from '../music/MusicProvider.tsx'
 import { parseYouTubeVideoUrl } from '../music/youtube-link.ts'
+import { useNarrow } from '../shell/useNarrow.ts'
 
 type DialogKind = 'create' | 'edit' | 'delete' | 'add' | null
 
@@ -15,6 +17,7 @@ export function MusicPage() {
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
   const selected = music.library.playlists.find((playlist) => playlist.id === music.selectedId) ?? null
+  const narrow = useNarrow()
 
   function openCreate() {
     setName('')
@@ -177,6 +180,11 @@ export function MusicPage() {
           <p className="panel-copy">Select a playlist.</p>
         )}
       </section>
+      {narrow ? null : (
+        <section id="now-playing-column" className="panel music-player-region" tabIndex={-1} aria-label="Player">
+          {music.session ? <NowPlaying presentation="column" /> : <p className="panel-copy">Nothing playing</p>}
+        </section>
+      )}
       {dialog ? (
         <MusicDialog onClose={closeDialog}>
           {dialog === 'delete' ? (

@@ -3,6 +3,8 @@ import {
   cycleRepeat,
   endOfTrack,
   nextTrack,
+  orderForShuffle,
+  playAtIndex,
   previousTrack,
   skipUnavailable,
   startAtTrack,
@@ -84,6 +86,31 @@ describe('playback queue', () => {
     expect(skipUnavailable(second.queue, 'off')).toEqual({ type: 'stop' })
     queue = second.queue
     expect(queue.failedIds).toEqual(['a', 'b'])
+  })
+
+  it('plays a later index through the same list without reshuffling', () => {
+    const queue = { trackIds: tracks, index: 0, failedIds: [] as string[] }
+    expect(playAtIndex(queue, 1)).toEqual({ trackIds: tracks, index: 1, failedIds: [] })
+    const shuffled = startPlaylist(tracks, { shuffle: true, random: reverse })!
+    const played = playAtIndex(shuffled, 1)
+    expect(played?.trackIds).toEqual(shuffled.trackIds)
+    expect(played?.index).toBe(1)
+    expect(startAtTrack(tracks, 'b', { shuffle: false })).toEqual({
+      trackIds: tracks,
+      index: 1,
+      failedIds: [],
+    })
+  })
+
+  it('shuffles the songs after the current one and restores saved order when shuffle is off', () => {
+    const queue = { trackIds: tracks, index: 1, failedIds: [] as string[] }
+    const enabled = orderForShuffle(queue, true, tracks, reverse)
+    expect(enabled.trackIds[0]).toBe('b')
+    expect(enabled.index).toBe(0)
+    expect(new Set(enabled.trackIds)).toEqual(new Set(tracks))
+    const restored = orderForShuffle(enabled, false, tracks, reverse)
+    expect(restored.trackIds).toEqual(tracks)
+    expect(restored.trackIds[restored.index]).toBe('b')
   })
 
   it('cycles repeat off, all, one, and back to off', () => {

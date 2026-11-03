@@ -93,6 +93,30 @@ export function skipUnavailable(
   return { type: 'play', queue: { ...advanced.queue, failedIds } }
 }
 
+export function playAtIndex(queue: QueueState, index: number): QueueState | null {
+  if (index < 0 || index >= queue.trackIds.length) return null
+  return { trackIds: [...queue.trackIds], index, failedIds: queue.failedIds }
+}
+
+export function orderForShuffle(
+  queue: QueueState,
+  enabled: boolean,
+  savedIds: string[],
+  random: () => number = Math.random,
+): QueueState {
+  const currentId = queue.trackIds[queue.index]
+  if (!enabled) {
+    const trackIds = savedIds.filter((id) => queue.trackIds.includes(id))
+    const index = Math.max(0, trackIds.indexOf(currentId))
+    return { trackIds, index, failedIds: queue.failedIds }
+  }
+  const rest = shuffled(
+    queue.trackIds.filter((id) => id !== currentId),
+    random,
+  )
+  return { trackIds: [currentId, ...rest], index: 0, failedIds: queue.failedIds }
+}
+
 export function cycleRepeat(mode: RepeatMode): RepeatMode {
   if (mode === 'off') return 'all'
   if (mode === 'all') return 'one'

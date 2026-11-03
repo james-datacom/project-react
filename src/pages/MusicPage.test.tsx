@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { MusicProvider, PlaybackState } from '../music/MusicProvider.tsx'
 import { saveLibrary, type LibraryStorage } from '../music/storage.ts'
 import pageSource from './MusicPage.tsx?raw'
-import playerSource from '../music/PlayerBar.tsx?raw'
+import playerSource from '../music/AudioEngine.tsx?raw'
 import youtubeSource from '../music/youtube-player.ts?raw'
 import shellSource from '../shell/AppShell.tsx?raw'
 import { MusicPage } from './MusicPage.tsx'
@@ -65,9 +65,14 @@ describe('Music page', () => {
   it('keeps the official player in the shell and adds no ad slot', () => {
     const css = readFileSync(new URL('../index.css', import.meta.url), 'utf8')
     const index = readFileSync(new URL('../../index.html', import.meta.url), 'utf8')
-    expect(shellSource).toContain('PlayerBar')
+    expect(shellSource).toContain('PlayerChrome')
     expect(shellSource).toContain('data-player')
     expect(playerSource).toContain('loadYouTubeIframeApi')
+    expect(playerSource).toContain('Playback is unavailable.')
+    expect(playerSource).toContain('role="alert"')
+    expect(playerSource).not.toContain('.player-frame')
+    expect(playerSource).not.toContain('Invidious')
+    expect(playerSource).not.toContain('Piped')
     expect(youtubeSource).toContain('https://www.youtube.com/iframe_api')
     expect(youtubeSource).toContain('controls: 0')
     expect(youtubeSource).toContain('rel: 0')
@@ -81,6 +86,6 @@ describe('Music page', () => {
     expect(css).toContain('grid-template-columns: 1fr')
     expect(css).not.toMatch(/icon-rail|64px/)
     expect(index.toLowerCase()).not.toMatch(/googlesyndication|doubleclick|adsbygoogle|skip ad/)
-    expect(`${pageSource}${playerSource}`.toLowerCase()).not.toMatch(/skip ad|sponsor slot|googlesyndication/)
+    expect(`${pageSource}${playerSource}`.toLowerCase()).not.toMatch(/skip ad|skip-ad|sponsor slot|googlesyndication/)
   })
 })

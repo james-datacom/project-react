@@ -1,0 +1,121 @@
+import { useRef, type PointerEvent } from 'react'
+import { coverFromTitle } from './cover.ts'
+import { QueueSheet } from './QueueSheet.tsx'
+import { useMusic } from './MusicProvider.tsx'
+
+function formatTime(seconds: number) {
+  const total = Math.max(0, Math.floor(seconds))
+  const minutes = Math.floor(total / 60)
+  const remain = total % 60
+  return `${minutes}:${remain.toString().padStart(2, '0')}`
+}
+
+export function NowPlaying({ presentation }: { presentation: 'sheet' | 'column' }) {
+  const music = useMusic()
+  const startY = useRef<number | null>(null)
+  const session = music.session
+  if (!session || session.trackIds.length === 0) return null
+
+  const playlist = music.library.playlists.find((item) => item.id === session.playlistId)
+  const trackId = session.trackIds[session.index]
+  const track = playlist?.tracks.find((item) => item.id === trackId)
+  const cover = coverFromTitle(track?.title ?? '')
+  const remaining = Math.max(0, music.duration - music.currentTime)
+
+  function onPointerDown(event: PointerEvent) {
+    const target = event.target
+    if (!(target instanceof Element)) return
+    if (target.closest('button, input, a, .queue-list')) return
+    startY.current = event.clientY
+  }
+
+  function onPointerUp(event: PointerEvent) {
+    if (startY.current == null) return
+    const delta = event.clientY - startY.current
+    startY.current = null
+    if (music.queueOpen && delta >= 48) music.closeQueue()
+    else if (!music.queueOpen && delta <= -48) music.openQueue()
+  }
+
+  function closeSheet() {
+    music.closeNowPlaying()
+    document.getElementById('mini-player-open')?.focus()
+  }
+
+  return (
+    <section
+      className={presentation === 'sheet' ? 'now-playing now-playing-sheet' : 'now-playing now-playing-column'}
+      aria-label="Now playing"
+      onPointerDown={onPointerDown}
+      onPointerUp={onPointerUp}
+    >
+      {presentation === 'sheet' ? (
+        <button type="button" className="now-playing-close" onClick={closeSheet}>
+          Close
+        </button>
+      ) : null}
+      <div className="cover-tile cover-tile-lg" style={{ background: cover.color }} aria-hidden="true">
+        {cover.initials}
+      </div>
+      <p className="now-playing-title">{track?.title ?? ''}</p>
+      <p className="now-playing-playlist">{playlist?.name ?? ''}</p>
+      <div className="now-playing-seek">
+        <span>{formatTime(music.currentTime)}</span>
+        <input
+          type="range"
+          aria-label="Seek"
+          min={0}
+          max={music.duration || 0}
+          step={0.1}
+          value={Math.min(music.currentTime, music.duration || 0)}
+          onChange={(event) => music.seek(Number(event.target.value))}
+        />
+        <span>{formatTime(remaining)}</span>
+      </div>
+      <div className="transport">
+        <div className="transport-main">
+          <button type="button" onClick={music.toggleShuffle}>
+            Shuffle {music.shuffle ? 'on' : 'off'}
+          </button>
+          <button type="button" onClick={music.goPrevious}>
+            Previous
+          </button>
+          <button type="button" className="transport-play" onClick={music.togglePlay}>
+            {session.paused ? 'Play' : 'Pause'}
+          </button>
+          <button type="button" onClick={music.goNext}>
+            Next
+          </button>
+          <button type="button" onClick={music.cycleRepeatMode}>
+            Repeat {music.repeat}
+          </button>
+        </div>
+        <div className="transport-volume">
+          <input
+            type="range"
+            aria-label="Volume"
+            min={0}
+            max={100}
+            step={1}
+            value={music.volume}
+            onChange={(event) => music.setVolume(Number(event.target.value))}
+          />
+          <button type="button" onClick={music.toggleMute}>
+            {music.muted ? 'Unmute' : 'Mute'}
+          </button>
+        </div>
+      </div>
+      <button
+        type="button"
+        className="up-next"
+        aria-expanded={music.queueOpen}
+        aria-controls="up-next-sheet"
+        onClick={() => (music.queueOpen ? music.closeQueue() : music.openQueue())}
+      >
+        <span className="up-next-handle" aria-hidden="true" />
+        Up next
+      </button>
+      {music.queueOpen ? <QueueSheet /> : null}
+    </section>
+  )
+}

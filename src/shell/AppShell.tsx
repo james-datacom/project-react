@@ -1,35 +1,23 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router'
+import { PlayerChrome } from '../music/PlayerChrome.tsx'
 import { MusicProvider, useMusic } from '../music/MusicProvider.tsx'
-import { PlayerBar } from '../music/PlayerBar.tsx'
-import { musicPath } from '../music/paths.ts'
 import { Header } from './Header.tsx'
 import { Sidebar } from './Sidebar.tsx'
-
-const narrowQuery = '(max-width: 48rem)'
+import { useNarrow } from './useNarrow.ts'
 
 export function AppShell() {
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarPath, setSidebarPath] = useState(location.pathname)
-  const [narrow, setNarrow] = useState(() =>
-    window.matchMedia(narrowQuery).matches,
-  )
+  const narrow = useNarrow('(max-width: 48rem)')
 
   if (sidebarPath !== location.pathname) {
     setSidebarPath(location.pathname)
     setSidebarOpen(false)
   }
 
-  useEffect(() => {
-    const media = window.matchMedia(narrowQuery)
-    const onChange = () => {
-      setNarrow(media.matches)
-      if (!media.matches) setSidebarOpen(false)
-    }
-    media.addEventListener('change', onChange)
-    return () => media.removeEventListener('change', onChange)
-  }, [])
+  if (!narrow && sidebarOpen) setSidebarOpen(false)
 
   useEffect(() => {
     if (!sidebarOpen) return
@@ -68,16 +56,13 @@ function ShellFrame({
   onMenuToggle: () => void
   onClose: () => void
 }) {
-  const location = useLocation()
   const { session } = useMusic()
-  const onMusic = location.pathname === musicPath
-  const showPlayer = onMusic || session !== null
 
   return (
     <div
       className="shell"
       data-sidebar-open={overlayOpen ? 'true' : 'false'}
-      data-player={showPlayer ? 'true' : 'false'}
+      data-player={session ? 'true' : 'false'}
     >
       <Sidebar hidden={narrow && !sidebarOpen} />
       {overlayOpen ? (
@@ -87,7 +72,7 @@ function ShellFrame({
       <main className="shell-body">
         <Outlet />
       </main>
-      {showPlayer ? <PlayerBar compact={!onMusic} /> : null}
+      <PlayerChrome />
     </div>
   )
 }

@@ -17,6 +17,7 @@ export default function App() {
         <Route path="account" element={<AccountPage />} />
         <Route path="health/protein-calculator" element={<ProteinCalculatorPage />} />
         <Route path={musicPath.slice(1)} element={<MusicPage />} />
+        <Route path={`${musicPath.slice(1)}/:playlistId`} element={<MusicPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

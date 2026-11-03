@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router'
 import { account, product } from '../content/placeholders.ts'
-import { musicPath } from '../music/paths.ts'
+import { isMusicRoute, musicPath } from '../music/paths.ts'
 import { ProfileAvatar } from './ProfileAvatar.tsx'
 
 export const proteinCalculatorPath = '/health/protein-calculator'
@@ -25,7 +25,7 @@ export function Sidebar({
 }) {
   const { pathname } = useLocation()
   const healthForced = pathname === proteinCalculatorPath
-  const musicForced = pathname === musicPath
+  const musicForced = isMusicRoute(pathname)
   const [healthOpen, setHealthOpen] = useState(false)
   const [musicOpen, setMusicOpen] = useState(initialEntertainmentOpen)
   const [trackedPath, setTrackedPath] = useState(pathname)
@@ -33,7 +33,7 @@ export function Sidebar({
   if (trackedPath !== pathname) {
     setTrackedPath(pathname)
     if (trackedPath === proteinCalculatorPath) setHealthOpen(false)
-    if (trackedPath === musicPath) setMusicOpen(false)
+    if (isMusicRoute(trackedPath)) setMusicOpen(false)
   }
 
   const healthExpanded = healthForced || healthOpen

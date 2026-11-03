@@ -1,5 +1,5 @@
 import { useLocation } from 'react-router'
-import { musicPath } from '../music/paths.ts'
+import { isMusicRoute, musicPath } from '../music/paths.ts'
 import { ProfileMenu } from './ProfileMenu.tsx'
 
 const titles: Record<string, string> = {
@@ -19,7 +19,7 @@ type HeaderProps = {
 
 export function Header({ menuOpen, showMenuButton, onMenuToggle }: HeaderProps) {
   const { pathname } = useLocation()
-  const title = titles[pathname] ?? 'Home'
+  const title = isMusicRoute(pathname) ? 'Music' : (titles[pathname] ?? 'Home')
 
   return (
     <header className="header">

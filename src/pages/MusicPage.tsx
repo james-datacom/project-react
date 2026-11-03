@@ -1,23 +1,51 @@
+import { ChevronLeft, Pencil, Play, Plus, Search, Trash2, X } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { Link, useNavigate, useParams } from 'react-router'
+import { coverFromTitle } from '../music/cover.ts'
+import type { Playlist } from '../music/library.ts'
 import { NowPlaying } from '../music/NowPlaying.tsx'
 import { fetchYouTubeTitle } from '../music/oembed.ts'
 import { useMusic } from '../music/MusicProvider.tsx'
+import { musicPath, playlistPath } from '../music/paths.ts'
 import { parseYouTubeVideoUrl } from '../music/youtube-link.ts'
 import { useNarrow } from '../shell/useNarrow.ts'
 
 type DialogKind = 'create' | 'edit' | 'delete' | 'add' | null
 
+function playlistMatches(playlist: Playlist, query: string) {
+  const needle = query.trim().toLowerCase()
+  if (!needle) return true
+  if (playlist.name.toLowerCase().includes(needle)) return true
+  return playlist.tracks.some((track) => track.title.toLowerCase().includes(needle))
+}
+
 export function MusicPage() {
+  const { playlistId } = useParams()
+  return playlistId ? <PlaylistSongs playlistId={playlistId} /> : <PlaylistLibrary />
+}
+
+function PlaylistLibrary() {
   const music = useMusic()
   const [dialog, setDialog] = useState<DialogKind>(null)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [url, setUrl] = useState('')
-  const [title, setTitle] = useState('')
   const [formError, setFormError] = useState('')
-  const [saving, setSaving] = useState(false)
-  const selected = music.library.playlists.find((playlist) => playlist.id === music.selectedId) ?? null
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const searchRef = useRef<HTMLInputElement>(null)
+  const visiblePlaylists = music.library.playlists.filter((playlist) => playlistMatches(playlist, query))
   const narrow = useNarrow()
+
+  useEffect(() => {
+    if (searchOpen) searchRef.current?.focus()
+  }, [searchOpen])
+
+  function toggleSearch() {
+    setSearchOpen((open) => {
+      if (open) setQuery('')
+      return !open
+    })
+  }
 
   function openCreate() {
     setName('')
@@ -26,10 +54,147 @@ export function MusicPage() {
     setDialog('create')
   }
 
+  function closeDialog() {
+    setDialog(null)
+    setFormError('')
+  }
+
+  function submitPlaylist(event: FormEvent) {
+    event.preventDefault()
+    const error = music.createPlaylist(name, description)
+    if (error) {
+      setFormError(error)
+      return
+    }
+    closeDialog()
+  }
+
+  return (
+    <div className="music-layout">
+      <section className="panel music-library" aria-label="Playlists">
+        <div className="music-library-bar">
+          <div className="music-library-actions">
+            <button
+              type="button"
+              className={searchOpen ? 'icon-button is-on' : 'icon-button'}
+              aria-label="Search music"
+              aria-expanded={searchOpen}
+              aria-controls="music-search"
+              onClick={toggleSearch}
+            >
+              <Search className="player-icon" aria-hidden="true" />
+            </button>
+            <button type="button" className="icon-button" aria-label="Add playlist" onClick={openCreate}>
+              <Plus className="player-icon" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+        {searchOpen ? (
+          <label className="music-search">
+            <span className="visually-hidden">Search music</span>
+            <input
+              id="music-search"
+              ref={searchRef}
+              value={query}
+              placeholder="Search music"
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </label>
+        ) : null}
+        {music.library.playlists.length === 0 ? (
+          <p className="panel-copy">No playlists yet.</p>
+        ) : visiblePlaylists.length === 0 ? (
+          <p className="panel-copy">No matching music.</p>
+        ) : (
+          <ul className="music-list">
+            {visiblePlaylists.map((playlist) => {
+              const cover = coverFromTitle(playlist.name)
+              return (
+                <li key={playlist.id}>
+                  <Link to={playlistPath(playlist.id)} className="music-playlist">
+                    <span className="cover-tile music-playlist-avatar" style={{ background: cover.color }} aria-hidden="true">
+                      {cover.initials}
+                    </span>
+                    <span className="music-playlist-name">{playlist.name}</span>
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </section>
+      <PlayerColumn narrow={narrow} />
+      {dialog === 'create' ? (
+        <MusicDialog onClose={closeDialog}>
+          <form onSubmit={submitPlaylist}>
+            <h2 className="panel-title">New playlist</h2>
+            <label className="calculator-field">
+              Name
+              <input value={name} onChange={(event) => setName(event.target.value)} />
+            </label>
+            <label className="calculator-field">
+              Description
+              <input value={description} onChange={(event) => setDescription(event.target.value)} />
+            </label>
+            {formError ? (
+              <p className="calculator-error" role="alert">
+                {formError}
+              </p>
+            ) : null}
+            <div className="calculator-actions">
+              <button type="submit" className="calculator-submit">
+                Save
+              </button>
+              <button type="button" className="calculator-reset" onClick={closeDialog}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        </MusicDialog>
+      ) : null}
+    </div>
+  )
+}
+
+function PlaylistSongs({ playlistId }: { playlistId: string }) {
+  const music = useMusic()
+  const navigate = useNavigate()
+  const playlist = music.library.playlists.find((item) => item.id === playlistId) ?? null
+  const [dialog, setDialog] = useState<DialogKind>(null)
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [url, setUrl] = useState('')
+  const [title, setTitle] = useState('')
+  const [formError, setFormError] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const searchRef = useRef<HTMLInputElement>(null)
+  const narrow = useNarrow()
+
+  useEffect(() => {
+    if (searchOpen) searchRef.current?.focus()
+  }, [searchOpen])
+
+  if (playlist && music.selectedId !== playlist.id) music.selectPlaylist(playlist.id)
+
+  function toggleSearch() {
+    setSearchOpen((open) => {
+      if (open) setQuery('')
+      return !open
+    })
+  }
+
+  function closeDialog() {
+    setDialog(null)
+    setFormError('')
+    setSaving(false)
+  }
+
   function openEdit() {
-    if (!selected) return
-    setName(selected.name)
-    setDescription(selected.description)
+    if (!playlist) return
+    setName(playlist.name)
+    setDescription(playlist.description)
     setFormError('')
     setDialog('edit')
   }
@@ -41,18 +206,10 @@ export function MusicPage() {
     setDialog('add')
   }
 
-  function closeDialog() {
-    setDialog(null)
-    setFormError('')
-    setSaving(false)
-  }
-
   function submitPlaylist(event: FormEvent) {
     event.preventDefault()
-    const error =
-      dialog === 'edit' && selected
-        ? music.updatePlaylist(selected.id, name, description)
-        : music.createPlaylist(name, description)
+    if (!playlist) return
+    const error = music.updatePlaylist(playlist.id, name, description)
     if (error) {
       setFormError(error)
       return
@@ -62,7 +219,7 @@ export function MusicPage() {
 
   async function submitSong(event: FormEvent) {
     event.preventDefault()
-    if (!selected) return
+    if (!playlist) return
     const parsed = parseYouTubeVideoUrl(url)
     if (!parsed.ok) {
       setFormError(parsed.error)
@@ -79,7 +236,7 @@ export function MusicPage() {
       }
       nextTitle = fetched
     }
-    const error = music.addTrack(selected.id, {
+    const error = music.addTrack(playlist.id, {
       youtubeUrl: url.trim(),
       videoId: parsed.videoId,
       title: nextTitle,
@@ -91,108 +248,126 @@ export function MusicPage() {
     closeDialog()
   }
 
+  const needle = query.trim().toLowerCase()
+  const visibleTracks = playlist?.tracks.filter((track) => track.title.toLowerCase().includes(needle)) ?? []
+
   return (
     <div className="music-layout">
-      <section className="panel music-library" aria-label="Playlists">
-        <div className="music-toolbar">
-          <h2 className="panel-title">Playlists</h2>
-          <button type="button" className="calculator-submit" onClick={openCreate}>
-            New playlist
-          </button>
+      <section className="panel music-library" aria-label="Tracks">
+        <div className="music-library-bar">
+          <Link to={musicPath} className="icon-button" aria-label="Back">
+            <ChevronLeft className="player-icon" aria-hidden="true" />
+          </Link>
+          <div className="music-library-actions">
+            <button
+              type="button"
+              className={searchOpen ? 'icon-button is-on' : 'icon-button'}
+              aria-label="Search music"
+              aria-expanded={searchOpen}
+              aria-controls="playlist-search"
+              onClick={toggleSearch}
+            >
+              <Search className="player-icon" aria-hidden="true" />
+            </button>
+            <button type="button" className="icon-button" aria-label="Add song" onClick={openAdd} disabled={!playlist}>
+              <Plus className="player-icon" aria-hidden="true" />
+            </button>
+          </div>
         </div>
-        {music.library.playlists.length === 0 ? (
-          <p className="panel-copy">No playlists yet.</p>
-        ) : (
-          <ul className="music-list">
-            {music.library.playlists.map((playlist) => (
-              <li key={playlist.id}>
-                <button
-                  type="button"
-                  className="music-playlist"
-                  aria-current={playlist.id === selected?.id ? 'true' : undefined}
-                  onClick={() => music.selectPlaylist(playlist.id)}
-                >
-                  {playlist.name}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-      <section className="panel music-tracks" aria-label="Tracks">
-        {selected ? (
+        {searchOpen ? (
+          <label className="music-search">
+            <span className="visually-hidden">Search music</span>
+            <input
+              id="playlist-search"
+              ref={searchRef}
+              value={query}
+              placeholder="Search music"
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </label>
+        ) : null}
+        {playlist ? (
           <>
-            <div className="music-toolbar">
+            <div className="music-heading">
               <div>
-                <h2 className="panel-title">{selected.name}</h2>
-                <p className="panel-copy">{selected.description}</p>
+                <h2 className="panel-title">{playlist.name}</h2>
+                {playlist.description ? <p className="panel-copy">{playlist.description}</p> : null}
               </div>
-              <div className="calculator-actions">
+              <div className="music-library-actions">
                 <button
                   type="button"
-                  className="calculator-submit"
-                  disabled={selected.tracks.length === 0}
-                  onClick={() => music.playPlaylist(selected.id)}
+                  className="icon-button"
+                  aria-label="Play"
+                  disabled={playlist.tracks.length === 0}
+                  onClick={() => music.playPlaylist(playlist.id)}
                 >
-                  Play
+                  <Play className="player-icon" />
                 </button>
-                <button type="button" className="calculator-reset" onClick={openEdit}>
-                  Edit
+                <button type="button" className="icon-button" aria-label="Edit" onClick={openEdit}>
+                  <Pencil className="player-icon" />
                 </button>
                 <button
                   type="button"
-                  className="calculator-reset"
+                  className="icon-button"
+                  aria-label="Delete"
                   onClick={() => {
                     setFormError('')
                     setDialog('delete')
                   }}
                 >
-                  Delete
-                </button>
-                <button type="button" className="calculator-reset" onClick={openAdd}>
-                  Add song
+                  <Trash2 className="player-icon" />
                 </button>
               </div>
             </div>
-            {selected.tracks.length === 0 ? (
+            {playlist.tracks.length === 0 ? (
               <p className="panel-copy">This playlist has no songs.</p>
+            ) : visibleTracks.length === 0 ? (
+              <p className="panel-copy">No matching music.</p>
             ) : (
               <ul className="music-list">
-                {selected.tracks.map((track) => (
-                  <li key={track.id} className="music-track">
-                    <button type="button" onClick={() => music.playTrack(selected.id, track.id)}>
-                      {track.title}
-                    </button>
-                    <button type="button" onClick={() => music.removeTrack(selected.id, track.id)}>
-                      Remove
-                    </button>
-                    {music.unavailableIds.includes(track.id) ? (
-                      <p className="calculator-error" role="alert">
-                        This video is unavailable.
-                      </p>
-                    ) : null}
-                  </li>
-                ))}
+                {visibleTracks.map((track) => {
+                  const cover = coverFromTitle(track.title)
+                  return (
+                    <li key={track.id} className="music-track">
+                      <button type="button" className="music-playlist" onClick={() => music.playTrack(playlist.id, track.id)}>
+                        <span className="cover-tile music-playlist-avatar" style={{ background: cover.color }} aria-hidden="true">
+                          {cover.initials}
+                        </span>
+                        <span className="music-playlist-name">{track.title}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="icon-button"
+                        aria-label="Remove"
+                        onClick={() => music.removeTrack(playlist.id, track.id)}
+                      >
+                        <X className="player-icon" aria-hidden="true" />
+                      </button>
+                      {music.unavailableIds.includes(track.id) ? (
+                        <p className="calculator-error" role="alert">
+                          This video is unavailable.
+                        </p>
+                      ) : null}
+                    </li>
+                  )
+                })}
               </ul>
             )}
           </>
         ) : (
-          <p className="panel-copy">Select a playlist.</p>
+          <p className="panel-copy">This playlist is not available.</p>
         )}
       </section>
-      {narrow ? null : (
-        <section id="now-playing-column" className="panel music-player-region" tabIndex={-1} aria-label="Player">
-          {music.session ? <NowPlaying presentation="column" /> : <p className="panel-copy">Nothing playing</p>}
-        </section>
-      )}
+      <PlayerColumn narrow={narrow} />
       {dialog ? (
         <MusicDialog onClose={closeDialog}>
           {dialog === 'delete' ? (
             <form
               onSubmit={(event) => {
                 event.preventDefault()
-                if (selected) music.deletePlaylist(selected.id)
+                if (playlist) music.deletePlaylist(playlist.id)
                 closeDialog()
+                navigate(musicPath)
               }}
             >
               <h2 className="panel-title">Delete playlist</h2>
@@ -207,9 +382,9 @@ export function MusicPage() {
               </div>
             </form>
           ) : null}
-          {dialog === 'create' || dialog === 'edit' ? (
+          {dialog === 'edit' ? (
             <form onSubmit={submitPlaylist}>
-              <h2 className="panel-title">{dialog === 'edit' ? 'Edit playlist' : 'New playlist'}</h2>
+              <h2 className="panel-title">Edit playlist</h2>
               <label className="calculator-field">
                 Name
                 <input value={name} onChange={(event) => setName(event.target.value)} />
@@ -262,6 +437,16 @@ export function MusicPage() {
         </MusicDialog>
       ) : null}
     </div>
+  )
+}
+
+function PlayerColumn({ narrow }: { narrow: boolean }) {
+  const music = useMusic()
+  if (narrow) return null
+  return (
+    <section id="now-playing-column" className="panel music-player-region" tabIndex={-1} aria-label="Player">
+      {music.session ? <NowPlaying presentation="column" /> : <p className="panel-copy">Nothing playing</p>}
+    </section>
   )
 }
 

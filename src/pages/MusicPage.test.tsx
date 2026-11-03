@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { MemoryRouter, Route, Routes } from 'react-router'
 import { describe, expect, it } from 'vitest'
 import { MusicProvider, PlaybackState } from '../music/MusicProvider.tsx'
 import { saveLibrary, type LibraryStorage } from '../music/storage.ts'
@@ -19,17 +20,27 @@ function memoryStorage(): LibraryStorage {
   }
 }
 
+function renderMusic(path: string, storage: LibraryStorage = memoryStorage()) {
+  return renderToStaticMarkup(
+    <MemoryRouter initialEntries={[path]}>
+      <MusicProvider storage={storage}>
+        <PlaybackState />
+        <Routes>
+          <Route path="/entertainment/music" element={<MusicPage />} />
+          <Route path="/entertainment/music/:playlistId" element={<MusicPage />} />
+        </Routes>
+      </MusicProvider>
+    </MemoryRouter>,
+  )
+}
+
 describe('Music page', () => {
   it('shows an empty library and does not start playback', () => {
-    const html = renderToStaticMarkup(
-      <MusicProvider storage={memoryStorage()}>
-        <PlaybackState />
-        <MusicPage />
-      </MusicProvider>,
-    )
+    const html = renderMusic('/entertainment/music')
 
     expect(html).toContain('No playlists yet.')
-    expect(html).toContain('New playlist')
+    expect(html).toContain('Search music')
+    expect(html).toContain('Add playlist')
     expect(html).toContain('data-playback="idle"')
     expect(html.toLowerCase()).not.toContain('spotify')
     expect(pageSource.toLowerCase()).not.toContain('spotify')
@@ -49,17 +60,20 @@ describe('Music page', () => {
         },
       ],
     })
-    const html = renderToStaticMarkup(
-      <MusicProvider storage={storage}>
-        <PlaybackState />
-        <MusicPage />
-      </MusicProvider>,
-    )
+    const html = renderMusic('/entertainment/music', storage)
+    const songs = renderMusic('/entertainment/music/p1', storage)
 
     expect(html).toContain('Focus')
-    expect(html).toContain('Quiet tracks')
+    expect(html).toContain('href="/entertainment/music/p1"')
+    expect(html).toContain('music-playlist-avatar')
+    expect(html).not.toContain('Quiet tracks')
+    expect(html).not.toContain('Select a playlist')
     expect(html).toContain('data-playback="idle"')
-    expect(html).toContain('disabled=""')
+    expect(songs).toContain('Quiet tracks')
+    expect(songs).toContain('Add song')
+    expect(songs).toContain('aria-label="Play"')
+    expect(songs).toContain('disabled=""')
+    expect(songs).toContain('This playlist has no songs.')
   })
 
   it('keeps the official player in the shell and adds no ad slot', () => {

@@ -5,13 +5,13 @@ import { AudioEngine } from './AudioEngine.tsx'
 import { MiniPlayer } from './MiniPlayer.tsx'
 import { NowPlaying } from './NowPlaying.tsx'
 import { useMusic } from './MusicProvider.tsx'
-import { musicPath } from './paths.ts'
+import { isMusicRoute } from './paths.ts'
 
 export function PlayerChrome() {
   const location = useLocation()
   const narrow = useNarrow()
   const music = useMusic()
-  const wideMusic = location.pathname === musicPath && !narrow
+  const wideMusic = isMusicRoute(location.pathname) && !narrow
 
   useEffect(() => {
     if (wideMusic && music.nowPlayingOpen) music.closeNowPlaying()

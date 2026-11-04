@@ -521,6 +521,12 @@ button.nav-link {
   overflow-x: clip;
 }
 
+.music-library {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
 .music-library-bar,
 .music-library-actions,
 .music-heading {
@@ -601,11 +607,18 @@ button.nav-link {
   align-items: center;
   gap: 0.25rem;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .music-track .music-playlist {
-  flex: 1;
+  flex: 1 1 0;
   width: auto;
+  min-width: 0;
+}
+
+.music-track > .icon-button {
+  flex: none;
 }
 
 .music-track .calculator-error {
@@ -616,6 +629,8 @@ button.nav-link {
   display: grid;
   gap: 0.35rem;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -655,6 +670,7 @@ button.nav-link {
 }
 
 .music-playlist-name {
+  flex: 1;
   min-width: 0;
   overflow: hidden;
   font-weight: 650;
@@ -761,6 +777,8 @@ button.nav-link {
 .now-playing-title,
 .now-playing-playlist {
   display: block;
+  max-width: 100%;
+  min-width: 0;
   margin: 0;
   overflow: hidden;
   white-space: nowrap;
@@ -974,8 +992,29 @@ button.nav-link {
 }
 
 .queue-list {
+  min-width: 0;
   min-height: 0;
   overflow: auto;
+}
+
+.queue-list p:not([role='alert']),
+.queue-list button {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  overflow: hidden;
+  text-align: left;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.queue-list button {
+  padding: 0.35rem 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
 }
 
 .music-player-region {

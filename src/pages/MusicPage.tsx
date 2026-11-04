@@ -1,12 +1,14 @@
-import { ChevronLeft, Pencil, Play, Plus, Search, Trash2, X } from 'lucide-react'
+import { ChevronLeft, EllipsisVertical, Pencil, Play, Plus, Search, Trash2, X } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { coverFromTitle } from '../music/cover.ts'
-import type { Playlist } from '../music/library.ts'
+import type { Library, Playlist } from '../music/library.ts'
 import { NowPlaying } from '../music/NowPlaying.tsx'
 import { fetchYouTubeTitle } from '../music/oembed.ts'
 import { useMusic } from '../music/MusicProvider.tsx'
 import { musicPath, playlistPath } from '../music/paths.ts'
+import { linkToFetch, titleForSave, titleFromLookup } from '../music/song-title.ts'
+import { playlistFile } from '../music/transfer.ts'
 import { parseYouTubeVideoUrl } from '../music/youtube-link.ts'
 import { useNarrow } from '../shell/useNarrow.ts'
 
@@ -24,15 +26,28 @@ export function MusicPage() {
   return playlistId ? <PlaylistSongs playlistId={playlistId} /> : <PlaylistLibrary />
 }
 
+function downloadLibrary(library: Library) {
+  const file = playlistFile(library)
+  const blob = new Blob([file.body], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = file.filename
+  anchor.click()
+  URL.revokeObjectURL(url)
+}
+
 function PlaylistLibrary() {
   const music = useMusic()
   const [dialog, setDialog] = useState<DialogKind>(null)
   const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
   const [formError, setFormError] = useState('')
+  const [importError, setImportError] = useState('')
+  const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
   const visiblePlaylists = music.library.playlists.filter((playlist) => playlistMatches(playlist, query))
   const narrow = useNarrow()
 
@@ -47,9 +62,17 @@ function PlaylistLibrary() {
     })
   }
 
+  useEffect(() => {
+    if (!menuOpen) return
+    function onKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') setMenuOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [menuOpen])
+
   function openCreate() {
     setName('')
-    setDescription('')
     setFormError('')
     setDialog('create')
   }
@@ -61,12 +84,31 @@ function PlaylistLibrary() {
 
   function submitPlaylist(event: FormEvent) {
     event.preventDefault()
-    const error = music.createPlaylist(name, description)
+    const error = music.createPlaylist(name)
     if (error) {
       setFormError(error)
       return
     }
     closeDialog()
+  }
+
+  function savePlaylists() {
+    downloadLibrary(music.library)
+    setMenuOpen(false)
+  }
+
+  async function importFile(file: File | undefined) {
+    if (!file) {
+      setImportError('Choose a playlist file.')
+      return
+    }
+    const error = music.importLibrary(await file.text())
+    if (error) {
+      setImportError(error)
+      return
+    }
+    setImportError('')
+    setMenuOpen(false)
   }
 
   return (
@@ -87,8 +129,44 @@ function PlaylistLibrary() {
             <button type="button" className="icon-button" aria-label="Add playlist" onClick={openCreate}>
               <Plus className="player-icon" aria-hidden="true" />
             </button>
+            <div className="playlist-menu">
+              <button
+                type="button"
+                className="icon-button"
+                aria-label="Playlist actions"
+                aria-expanded={menuOpen}
+                aria-controls="playlist-actions"
+                onClick={() => setMenuOpen((open) => !open)}
+              >
+                <EllipsisVertical className="player-icon" aria-hidden="true" />
+              </button>
+              <div id="playlist-actions" className="playlist-menu-list" role="menu" hidden={!menuOpen}>
+                <button type="button" role="menuitem" onClick={savePlaylists}>
+                  Save Playlist
+                </button>
+                <button type="button" role="menuitem" onClick={() => fileRef.current?.click()}>
+                  Import Playlist
+                </button>
+              </div>
+            </div>
           </div>
         </div>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/json,.json"
+          className="visually-hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0]
+            event.target.value = ''
+            void importFile(file)
+          }}
+        />
+        {importError ? (
+          <p className="calculator-error" role="alert">
+            {importError}
+          </p>
+        ) : null}
         {searchOpen ? (
           <label className="music-search">
             <span className="visually-hidden">Search music</span>
@@ -132,10 +210,6 @@ function PlaylistLibrary() {
               Name
               <input value={name} onChange={(event) => setName(event.target.value)} />
             </label>
-            <label className="calculator-field">
-              Description
-              <input value={description} onChange={(event) => setDescription(event.target.value)} />
-            </label>
             {formError ? (
               <p className="calculator-error" role="alert">
                 {formError}
@@ -162,11 +236,10 @@ function PlaylistSongs({ playlistId }: { playlistId: string }) {
   const playlist = music.library.playlists.find((item) => item.id === playlistId) ?? null
   const [dialog, setDialog] = useState<DialogKind>(null)
   const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
   const [url, setUrl] = useState('')
   const [title, setTitle] = useState('')
   const [formError, setFormError] = useState('')
-  const [saving, setSaving] = useState(false)
+  const lookupRef = useRef(0)
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
@@ -188,13 +261,11 @@ function PlaylistSongs({ playlistId }: { playlistId: string }) {
   function closeDialog() {
     setDialog(null)
     setFormError('')
-    setSaving(false)
   }
 
   function openEdit() {
     if (!playlist) return
     setName(playlist.name)
-    setDescription(playlist.description)
     setFormError('')
     setDialog('edit')
   }
@@ -209,7 +280,7 @@ function PlaylistSongs({ playlistId }: { playlistId: string }) {
   function submitPlaylist(event: FormEvent) {
     event.preventDefault()
     if (!playlist) return
-    const error = music.updatePlaylist(playlist.id, name, description)
+    const error = music.updatePlaylist(playlist.id, name)
     if (error) {
       setFormError(error)
       return
@@ -217,7 +288,19 @@ function PlaylistSongs({ playlistId }: { playlistId: string }) {
     closeDialog()
   }
 
-  async function submitSong(event: FormEvent) {
+  async function onLinkChange(value: string) {
+    setUrl(value)
+    const request = ++lookupRef.current
+    const fetchUrl = linkToFetch(value)
+    if (!fetchUrl) return
+    const fetched = await fetchYouTubeTitle(fetchUrl)
+    const applied = titleFromLookup(lookupRef.current, request, fetched)
+    if (!applied.apply) return
+    setTitle(applied.title)
+    if (!applied.title) setFormError('Enter a title. The video title could not be loaded.')
+  }
+
+  function submitSong(event: FormEvent) {
     event.preventDefault()
     if (!playlist) return
     const parsed = parseYouTubeVideoUrl(url)
@@ -225,16 +308,10 @@ function PlaylistSongs({ playlistId }: { playlistId: string }) {
       setFormError(parsed.error)
       return
     }
-    let nextTitle = title.trim()
+    const nextTitle = titleForSave(title)
     if (!nextTitle) {
-      setSaving(true)
-      const fetched = await fetchYouTubeTitle(url.trim())
-      setSaving(false)
-      if (!fetched) {
-        setFormError('Enter a title. The video title could not be loaded.')
-        return
-      }
-      nextTitle = fetched
+      setFormError('Enter a title.')
+      return
     }
     const error = music.addTrack(playlist.id, {
       youtubeUrl: url.trim(),
@@ -291,7 +368,6 @@ function PlaylistSongs({ playlistId }: { playlistId: string }) {
             <div className="music-heading">
               <div>
                 <h2 className="panel-title">{playlist.name}</h2>
-                {playlist.description ? <p className="panel-copy">{playlist.description}</p> : null}
               </div>
               <div className="music-library-actions">
                 <button
@@ -389,10 +465,6 @@ function PlaylistSongs({ playlistId }: { playlistId: string }) {
                 Name
                 <input value={name} onChange={(event) => setName(event.target.value)} />
               </label>
-              <label className="calculator-field">
-                Description
-                <input value={description} onChange={(event) => setDescription(event.target.value)} />
-              </label>
               {formError ? (
                 <p className="calculator-error" role="alert">
                   {formError}
@@ -413,7 +485,7 @@ function PlaylistSongs({ playlistId }: { playlistId: string }) {
               <h2 className="panel-title">Add song</h2>
               <label className="calculator-field">
                 YouTube link
-                <input value={url} onChange={(event) => setUrl(event.target.value)} />
+                <input value={url} onChange={(event) => void onLinkChange(event.target.value)} />
               </label>
               <label className="calculator-field">
                 Title
@@ -425,7 +497,7 @@ function PlaylistSongs({ playlistId }: { playlistId: string }) {
                 </p>
               ) : null}
               <div className="calculator-actions">
-                <button type="submit" className="calculator-submit" disabled={saving}>
+                <button type="submit" className="calculator-submit">
                   Save
                 </button>
                 <button type="button" className="calculator-reset" onClick={closeDialog}>

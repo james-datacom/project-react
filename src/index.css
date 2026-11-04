@@ -536,6 +536,42 @@ button.nav-link {
   margin-left: auto;
 }
 
+.playlist-menu {
+  position: relative;
+}
+
+.playlist-menu-list {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  right: 0;
+  z-index: 3;
+  display: grid;
+  min-width: 11rem;
+  padding: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+}
+
+.playlist-menu-list[hidden] {
+  display: none;
+}
+
+.playlist-menu-list button {
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+}
+
+.playlist-menu-list button:hover {
+  background: var(--hover);
+}
+
 .music-heading {
   justify-content: space-between;
   gap: 0.75rem;

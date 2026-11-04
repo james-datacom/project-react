@@ -27,7 +27,6 @@ export type LibraryResult = LibrarySuccess | LibraryFailure
 
 export type PlaylistDraft = {
   name: string
-  description?: string
 }
 
 export type TrackDraft = {
@@ -42,13 +41,11 @@ function failure(error: string): LibraryFailure {
   return { ok: false, error }
 }
 
-function validatePlaylistText(draft: PlaylistDraft): LibraryFailure | { name: string; description: string } {
-  const name = draft.name.trim()
-  const description = (draft.description ?? '').trim()
-  if (!name) return failure('Name is required.')
-  if (name.length > 80) return failure('Name must be 80 characters or fewer.')
-  if (description.length > 200) return failure('Description must be 200 characters or fewer.')
-  return { name, description }
+function validatePlaylistName(name: string): LibraryFailure | { name: string } {
+  const trimmed = name.trim()
+  if (!trimmed) return failure('Name is required.')
+  if (trimmed.length > 80) return failure('Name must be 80 characters or fewer.')
+  return { name: trimmed }
 }
 
 export function createPlaylist(
@@ -56,12 +53,12 @@ export function createPlaylist(
   draft: PlaylistDraft,
   meta: { id: string; now: string },
 ): LibraryResult {
-  const text = validatePlaylistText(draft)
+  const text = validatePlaylistName(draft.name)
   if ('ok' in text) return text
   const playlist: Playlist = {
     id: meta.id,
     name: text.name,
-    description: text.description,
+    description: '',
     createdAt: meta.now,
     updatedAt: meta.now,
     tracks: [],
@@ -75,7 +72,7 @@ export function updatePlaylist(
   draft: PlaylistDraft,
   now: string,
 ): LibraryResult {
-  const text = validatePlaylistText(draft)
+  const text = validatePlaylistName(draft.name)
   if ('ok' in text) return text
   let found = false
   const playlists = library.playlists.map((playlist) => {
@@ -84,7 +81,7 @@ export function updatePlaylist(
     return {
       ...playlist,
       name: text.name,
-      description: text.description,
+      description: playlist.description,
       updatedAt: now,
     }
   })

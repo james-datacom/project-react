@@ -22,6 +22,7 @@ import {
   type RepeatMode,
 } from './queue.ts'
 import { loadLibrary, saveLibrary, type LibraryStorage } from './storage.ts'
+import { commitImport } from './transfer.ts'
 import type { PlayerHandle } from './youtube-player.ts'
 
 export type Session = {
@@ -53,8 +54,9 @@ type MusicContextValue = {
   nowPlayingOpen: boolean
   queueOpen: boolean
   selectPlaylist: (playlistId: string) => void
-  createPlaylist: (name: string, description: string) => string | null
-  updatePlaylist: (playlistId: string, name: string, description: string) => string | null
+  createPlaylist: (name: string) => string | null
+  updatePlaylist: (playlistId: string, name: string) => string | null
+  importLibrary: (raw: string | null) => string | null
   deletePlaylist: (playlistId: string) => void
   addTrack: (
     playlistId: string,
@@ -253,8 +255,8 @@ export function MusicProvider({
       nowPlayingOpen,
       queueOpen,
       selectPlaylist: (playlistId) => setSelectedId(playlistId),
-      createPlaylist: (name, description) => {
-        const result = createPlaylistRecord(libraryRef.current, { name, description }, {
+      createPlaylist: (name) => {
+        const result = createPlaylistRecord(libraryRef.current, { name }, {
           id: crypto.randomUUID(),
           now: new Date().toISOString(),
         })
@@ -263,16 +265,22 @@ export function MusicProvider({
         setSelectedId(result.library.playlists.at(-1)?.id ?? null)
         return null
       },
-      updatePlaylist: (playlistId, name, description) => {
-        const result = updatePlaylistRecord(
-          libraryRef.current,
-          playlistId,
-          { name, description },
-          new Date().toISOString(),
-        )
+      updatePlaylist: (playlistId, name) => {
+        const result = updatePlaylistRecord(libraryRef.current, playlistId, { name }, new Date().toISOString())
         if (!result.ok) return result.error
         commit(result.library)
         return null
+      },
+      importLibrary: (raw) => {
+        try {
+          const result = commitImport(storageRef.current, libraryRef.current, raw)
+          if (!result.ok) return result.error
+          setLibrary(result.library)
+          libraryRef.current = result.library
+          return null
+        } catch {
+          return 'The playlist file could not be saved.'
+        }
       },
       deletePlaylist: (playlistId) => {
         const result = deletePlaylistRecord(libraryRef.current, playlistId)

@@ -3,7 +3,8 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { describe, expect, it } from 'vitest'
 import { MusicProvider, PlaybackState } from '../music/MusicProvider.tsx'
-import { saveLibrary, type LibraryStorage } from '../music/storage.ts'
+import { MUSIC_LIBRARY_KEY, saveLibrary, type LibraryStorage } from '../music/storage.ts'
+import { playlistFile } from '../music/transfer.ts'
 import pageSource from './MusicPage.tsx?raw'
 import playerSource from '../music/AudioEngine.tsx?raw'
 import youtubeSource from '../music/youtube-player.ts?raw'
@@ -41,6 +42,10 @@ describe('Music page', () => {
     expect(html).toContain('No playlists yet.')
     expect(html).toContain('Search music')
     expect(html).toContain('Add playlist')
+    expect(html).toContain('Playlist actions')
+    expect(html).toContain('Save Playlist')
+    expect(html).toContain('Import Playlist')
+    expect(html).toContain('accept="application/json,.json"')
     expect(html).toContain('data-playback="idle"')
     expect(html.toLowerCase()).not.toContain('spotify')
     expect(pageSource.toLowerCase()).not.toContain('spotify')
@@ -69,7 +74,9 @@ describe('Music page', () => {
     expect(html).not.toContain('Quiet tracks')
     expect(html).not.toContain('Select a playlist')
     expect(html).toContain('data-playback="idle"')
-    expect(songs).toContain('Quiet tracks')
+    expect(songs).not.toContain('Quiet tracks')
+    expect(pageSource).not.toContain('Description')
+    expect(songs).not.toContain('Playlist actions')
     expect(songs).toContain('Add song')
     expect(songs).toContain('aria-label="Play"')
     expect(songs).toContain('disabled=""')
@@ -101,5 +108,41 @@ describe('Music page', () => {
     expect(css).not.toMatch(/icon-rail|64px/)
     expect(index.toLowerCase()).not.toMatch(/googlesyndication|doubleclick|adsbygoogle|skip ad/)
     expect(`${pageSource}${playerSource}`.toLowerCase()).not.toMatch(/skip ad|skip-ad|sponsor slot|googlesyndication/)
+  })
+
+  it('prepares a playlist download without changing stored playlists', () => {
+    const storage = memoryStorage()
+    saveLibrary(storage, {
+      playlists: [
+        {
+          id: 'p1',
+          name: 'Focus',
+          description: 'Quiet tracks',
+          createdAt: '2026-11-03T00:00:00.000Z',
+          updatedAt: '2026-11-03T00:00:00.000Z',
+          tracks: [],
+        },
+      ],
+    })
+    const before = storage.getItem(MUSIC_LIBRARY_KEY)
+    renderMusic('/entertainment/music', storage)
+    const file = playlistFile({
+      playlists: [
+        {
+          id: 'p1',
+          name: 'Focus',
+          description: 'Quiet tracks',
+          createdAt: '2026-11-03T00:00:00.000Z',
+          updatedAt: '2026-11-03T00:00:00.000Z',
+          tracks: [],
+        },
+      ],
+    })
+
+    expect(file.filename).toBe('music-library.json')
+    expect(JSON.parse(file.body).playlists[0].name).toBe('Focus')
+    expect(pageSource).toContain('playlistFile')
+    expect(pageSource).not.toContain('saveLibrary')
+    expect(storage.getItem(MUSIC_LIBRARY_KEY)).toBe(before)
   })
 })

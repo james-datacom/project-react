@@ -107,17 +107,17 @@ describe('player chrome', () => {
     expect(paused).not.toContain('aria-label="Pause"')
   })
 
-  it('lists the tail of the queue under Next', () => {
+  it('shows the next song as a ticker and does not open a queue page', () => {
     const html = renderToStaticMarkup(
       <MusicProvider storage={libraryStorage()} initialSession={session} initialQueueOpen>
         <NowPlaying presentation="sheet" />
       </MusicProvider>,
     )
-    const nextHeading = html.indexOf('>Next<')
-    expect(nextHeading).toBeGreaterThan(-1)
-    expect(html.indexOf('Second')).toBeGreaterThan(nextHeading)
-    expect(html.indexOf('Third')).toBeGreaterThan(html.indexOf('Second'))
-    expect(html).toContain('aria-current="true"')
+    expect(html).toContain('Up Next: Second')
+    expect(html).toContain('up-next-track')
+    expect(html).not.toContain('role="dialog"')
+    expect(html).not.toContain('aria-expanded')
+    expect(html).not.toContain('up-next-sheet')
     expect(html).not.toContain('<iframe')
     expect(html).not.toContain('player-frame')
   })

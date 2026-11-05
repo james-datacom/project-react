@@ -1,8 +1,7 @@
 import { ChevronDown, Pause, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react'
-import { useRef, type PointerEvent } from 'react'
 import { SongCover } from './SongCover.tsx'
-import { QueueSheet } from './QueueSheet.tsx'
 import { useMusic } from './MusicProvider.tsx'
+import type { RepeatMode } from './queue.ts'
 
 function formatTime(seconds: number) {
   const total = Math.max(0, Math.floor(seconds))
@@ -11,9 +10,20 @@ function formatTime(seconds: number) {
   return `${minutes}:${remain.toString().padStart(2, '0')}`
 }
 
+function nextSongTitle(
+  trackIds: string[],
+  index: number,
+  repeat: RepeatMode,
+  titleFor: (trackId: string) => string,
+) {
+  const nextIndex =
+    index + 1 < trackIds.length ? index + 1 : repeat === 'one' ? index : repeat === 'all' ? 0 : -1
+  if (nextIndex < 0) return ''
+  return titleFor(trackIds[nextIndex] ?? '')
+}
+
 export function NowPlaying({ presentation }: { presentation: 'sheet' | 'column' }) {
   const music = useMusic()
-  const startY = useRef<number | null>(null)
   const session = music.session
   if (!session || session.trackIds.length === 0) return null
 
@@ -21,21 +31,10 @@ export function NowPlaying({ presentation }: { presentation: 'sheet' | 'column' 
   const trackId = session.trackIds[session.index]
   const track = playlist?.tracks.find((item) => item.id === trackId)
   const remaining = Math.max(0, music.duration - music.currentTime)
-
-  function onPointerDown(event: PointerEvent) {
-    const target = event.target
-    if (!(target instanceof Element)) return
-    if (target.closest('button, input, a, .queue-list')) return
-    startY.current = event.clientY
-  }
-
-  function onPointerUp(event: PointerEvent) {
-    if (startY.current == null) return
-    const delta = event.clientY - startY.current
-    startY.current = null
-    if (music.queueOpen && delta >= 48) music.closeQueue()
-    else if (!music.queueOpen && delta <= -48) music.openQueue()
-  }
+  const nextTitle = nextSongTitle(session.trackIds, session.index, music.repeat, (id) => {
+    return playlist?.tracks.find((item) => item.id === id)?.title ?? ''
+  })
+  const upNext = nextTitle ? `Up Next: ${nextTitle}` : 'Up Next:'
 
   function closeSheet() {
     music.closeNowPlaying()
@@ -46,8 +45,6 @@ export function NowPlaying({ presentation }: { presentation: 'sheet' | 'column' 
     <section
       className={presentation === 'sheet' ? 'now-playing now-playing-sheet' : 'now-playing now-playing-column'}
       aria-label="Now playing"
-      onPointerDown={onPointerDown}
-      onPointerUp={onPointerUp}
     >
       {presentation === 'sheet' ? (
         <button type="button" className="now-playing-close icon-button" aria-label="Close" onClick={closeSheet}>
@@ -126,17 +123,12 @@ export function NowPlaying({ presentation }: { presentation: 'sheet' | 'column' 
           </button>
         </div>
       </div>
-      <button
-        type="button"
-        className="up-next"
-        aria-expanded={music.queueOpen}
-        aria-controls="up-next-sheet"
-        onClick={() => (music.queueOpen ? music.closeQueue() : music.openQueue())}
-      >
-        <span className="up-next-handle" aria-hidden="true" />
-        Up next
-      </button>
-      {music.queueOpen ? <QueueSheet /> : null}
+      <p className="up-next">
+        <span className="visually-hidden">{upNext}</span>
+        <span className="up-next-ticker" aria-hidden="true">
+          <span className="up-next-track">{upNext}</span>
+        </span>
+      </p>
     </section>
   )
 }

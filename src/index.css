@@ -733,7 +733,9 @@ button.nav-link {
 }
 
 .music-dialog {
+  position: fixed;
   z-index: 5;
+  inset: 0;
   width: min(28rem, calc(100% - 2rem));
   height: fit-content;
   max-height: 100dvh;
@@ -748,6 +750,8 @@ button.nav-link {
 
 .music-dialog::backdrop {
   background: rgb(26 26 26 / 40%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .music-dialog form {

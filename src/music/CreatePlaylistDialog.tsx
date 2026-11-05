@@ -10,15 +10,19 @@ function PlaylistDialog({ children, onClose }: { children: ReactNode; onClose: (
   useEffect(() => {
     const dialog = ref.current
     if (!dialog) return
+    if (!dialog.open) dialog.showModal()
     const handleCancel = (event: Event) => {
       event.preventDefault()
       onCloseRef.current()
     }
     dialog.addEventListener('cancel', handleCancel)
-    return () => dialog.removeEventListener('cancel', handleCancel)
+    return () => {
+      dialog.removeEventListener('cancel', handleCancel)
+      if (dialog.open) dialog.close()
+    }
   }, [])
   return (
-    <dialog ref={ref} className="music-dialog" open>
+    <dialog ref={ref} className="music-dialog">
       {children}
     </dialog>
   )

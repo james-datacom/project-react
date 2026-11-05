@@ -30,13 +30,13 @@ npm run preview
 
 `.github/workflows/deploy.yml` deploys the app.
 
-- A push to `main` starts the workflow. Pushes to other branches do not.
-- An operator can also run it manually from the Actions tab. A manual run publishes the revision that was selected, which can be a branch other than `main`.
+- A push to `main` does not deploy. The site keeps serving the last successful deployment.
+- Run the workflow manually from the Actions tab to publish. A manual run publishes the revision that was selected, which can be a branch other than `main`.
 - The build job checks out the repo, installs dependencies with `npm ci`, runs `npm test` only when a test script exists, then runs `npm run build`.
 - The deploy job publishes the `dist` artifact to the `github-pages` environment. It does not commit the build or use a `gh-pages` branch.
 - If the tests or the build fail, the deploy job does not run, and the current Pages site stays as it is.
 
-Merging code into `main` pushes that commit and starts this workflow. When the deploy job succeeds, GitHub Pages serves the new build at the URL above.
+Merging code into `main` updates the repository only. GitHub Pages serves a new build after you run this workflow and the deploy job succeeds.
 
 Before the first deploy, set the repository's Pages source to GitHub Actions:
 

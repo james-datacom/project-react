@@ -120,6 +120,14 @@ describe('player chrome', () => {
     expect(html).not.toContain('up-next-sheet')
     expect(html).not.toContain('<iframe')
     expect(html).not.toContain('player-frame')
+
+    const last = renderToStaticMarkup(
+      <MusicProvider storage={libraryStorage()} initialSession={{ ...session, index: 2 }}>
+        <NowPlaying presentation="sheet" />
+      </MusicProvider>,
+    )
+    expect(last).not.toContain('Up Next:')
+    expect(last).toContain('aria-label="Next" disabled=""')
   })
 
   it('does not reserve a player frame in the stylesheet', () => {

@@ -34,7 +34,7 @@ export function NowPlaying({ presentation }: { presentation: 'sheet' | 'column' 
   const nextTitle = nextSongTitle(session.trackIds, session.index, music.repeat, (id) => {
     return playlist?.tracks.find((item) => item.id === id)?.title ?? ''
   })
-  const upNext = nextTitle ? `Up Next: ${nextTitle}` : 'Up Next:'
+  const upNext = `Up Next: ${nextTitle}`
 
   function closeSheet() {
     music.closeNowPlaying()
@@ -89,7 +89,7 @@ export function NowPlaying({ presentation }: { presentation: 'sheet' | 'column' 
           >
             {session.paused ? <Play className="player-icon player-icon-lg" /> : <Pause className="player-icon player-icon-lg" />}
           </button>
-          <button type="button" className="icon-button" aria-label="Next" onClick={music.goNext}>
+          <button type="button" className="icon-button" aria-label="Next" onClick={music.goNext} disabled={!nextTitle}>
             <SkipForward className="player-icon" />
           </button>
           <button
@@ -123,12 +123,14 @@ export function NowPlaying({ presentation }: { presentation: 'sheet' | 'column' 
           </button>
         </div>
       </div>
-      <p className="up-next">
-        <span className="visually-hidden">{upNext}</span>
-        <span className="up-next-ticker" aria-hidden="true">
-          <span className="up-next-track">{upNext}</span>
-        </span>
-      </p>
+      {nextTitle ? (
+        <p className="up-next">
+          <span className="visually-hidden">{upNext}</span>
+          <span className="up-next-ticker" aria-hidden="true">
+            <span className="up-next-track">{upNext}</span>
+          </span>
+        </p>
+      ) : null}
     </section>
   )
 }

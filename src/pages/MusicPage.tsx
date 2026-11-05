@@ -1,7 +1,7 @@
 import { ChevronLeft, EllipsisVertical, Pencil, Play, Plus, Search, Trash2, X } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { coverFromTitle } from '../music/cover.ts'
+import { PlaylistCover } from '../music/PlaylistCover.tsx'
 import { SongCover } from '../music/SongCover.tsx'
 import type { Library, Playlist } from '../music/library.ts'
 import { NowPlaying } from '../music/NowPlaying.tsx'
@@ -186,19 +186,14 @@ function PlaylistLibrary() {
           <p className="panel-copy">No matching music.</p>
         ) : (
           <ul className="music-list">
-            {visiblePlaylists.map((playlist) => {
-              const cover = coverFromTitle(playlist.name)
-              return (
-                <li key={playlist.id}>
-                  <Link to={playlistPath(playlist.id)} className="music-playlist">
-                    <span className="cover-tile music-playlist-avatar" style={{ background: cover.color }} aria-hidden="true">
-                      {cover.initials}
-                    </span>
-                    <span className="music-playlist-name">{playlist.name}</span>
-                  </Link>
-                </li>
-              )
-            })}
+            {visiblePlaylists.map((playlist) => (
+              <li key={playlist.id}>
+                <Link to={playlistPath(playlist.id)} className="music-playlist">
+                  <PlaylistCover name={playlist.name} tracks={playlist.tracks} />
+                  <span className="music-playlist-name">{playlist.name}</span>
+                </Link>
+              </li>
+            ))}
           </ul>
         )}
       </section>

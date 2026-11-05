@@ -1,5 +1,6 @@
 import { Pause, Play } from 'lucide-react'
 import { coverFromTitle } from './cover.ts'
+import { SongCover } from './SongCover.tsx'
 import { useMusic } from './MusicProvider.tsx'
 
 export function MiniPlayer({ wideMusic }: { wideMusic: boolean }) {
@@ -28,9 +29,7 @@ export function MiniPlayer({ wideMusic }: { wideMusic: boolean }) {
     >
       <div className="mini-player-progress" aria-hidden="true" style={{ width: `${progress}%` }} />
       <button type="button" id="mini-player-open" className="mini-player-open" onClick={openNowPlaying}>
-        <span className="cover-tile cover-tile-sm" style={{ background: cover.color }} aria-hidden="true">
-          {cover.initials}
-        </span>
+        <SongCover videoId={track?.videoId ?? ''} title={track?.title ?? ''} className="cover-tile cover-tile-sm" />
         <span className="mini-player-copy">
           <span className="mini-player-title">{track?.title ?? ''}</span>
           <span className="mini-player-playlist">{playlist?.name ?? ''}</span>

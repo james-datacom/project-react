@@ -1,6 +1,6 @@
 import { ChevronDown, Pause, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react'
 import { useRef, type PointerEvent } from 'react'
-import { coverFromTitle } from './cover.ts'
+import { SongCover } from './SongCover.tsx'
 import { QueueSheet } from './QueueSheet.tsx'
 import { useMusic } from './MusicProvider.tsx'
 
@@ -20,7 +20,6 @@ export function NowPlaying({ presentation }: { presentation: 'sheet' | 'column' 
   const playlist = music.library.playlists.find((item) => item.id === session.playlistId)
   const trackId = session.trackIds[session.index]
   const track = playlist?.tracks.find((item) => item.id === trackId)
-  const cover = coverFromTitle(track?.title ?? '')
   const remaining = Math.max(0, music.duration - music.currentTime)
 
   function onPointerDown(event: PointerEvent) {
@@ -55,9 +54,7 @@ export function NowPlaying({ presentation }: { presentation: 'sheet' | 'column' 
           <ChevronDown className="player-icon" />
         </button>
       ) : null}
-      <div className="cover-tile cover-tile-lg" style={{ background: cover.color }} aria-hidden="true">
-        {cover.initials}
-      </div>
+      <SongCover videoId={track?.videoId ?? ''} title={track?.title ?? ''} className="cover-tile cover-tile-lg" />
       <p className="now-playing-title">{track?.title ?? ''}</p>
       <p className="now-playing-playlist">{playlist?.name ?? ''}</p>
       <div className="now-playing-seek">

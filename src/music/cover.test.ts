@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { coverFromTitle } from './cover.ts'
+import { coverFromTitle, thumbnailUrl } from './cover.ts'
 
 describe('coverFromTitle', () => {
   it('uses the first character of the first two words', () => {
@@ -13,6 +13,11 @@ describe('coverFromTitle', () => {
 
   it('returns the same color for the same title', () => {
     expect(coverFromTitle('Blue Monday').color).toBe(coverFromTitle('Blue Monday').color)
+  })
+
+  it('builds a YouTube thumbnail from the video id', () => {
+    expect(thumbnailUrl('abcdefghijk')).toBe('https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg')
+    expect(thumbnailUrl('')).toBe('')
   })
 
   it('does not use Spotify green', () => {

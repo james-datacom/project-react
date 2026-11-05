@@ -2,6 +2,7 @@ import { ChevronLeft, EllipsisVertical, Pencil, Play, Plus, Search, Trash2, X } 
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { coverFromTitle } from '../music/cover.ts'
+import { SongCover } from '../music/SongCover.tsx'
 import type { Library, Playlist } from '../music/library.ts'
 import { NowPlaying } from '../music/NowPlaying.tsx'
 import { fetchYouTubeTitle } from '../music/oembed.ts'
@@ -401,32 +402,27 @@ function PlaylistSongs({ playlistId }: { playlistId: string }) {
               <p className="panel-copy">No matching music.</p>
             ) : (
               <ul className="music-list">
-                {visibleTracks.map((track) => {
-                  const cover = coverFromTitle(track.title)
-                  return (
-                    <li key={track.id} className="music-track">
-                      <button type="button" className="music-playlist" onClick={() => music.playTrack(playlist.id, track.id)}>
-                        <span className="cover-tile music-playlist-avatar" style={{ background: cover.color }} aria-hidden="true">
-                          {cover.initials}
-                        </span>
-                        <span className="music-playlist-name">{track.title}</span>
-                      </button>
-                      <button
-                        type="button"
-                        className="icon-button"
-                        aria-label="Remove"
-                        onClick={() => music.removeTrack(playlist.id, track.id)}
-                      >
-                        <X className="player-icon" aria-hidden="true" />
-                      </button>
-                      {music.unavailableIds.includes(track.id) ? (
-                        <p className="calculator-error" role="alert">
-                          This video is unavailable.
-                        </p>
-                      ) : null}
-                    </li>
-                  )
-                })}
+                {visibleTracks.map((track) => (
+                  <li key={track.id} className="music-track">
+                    <button type="button" className="music-playlist" onClick={() => music.playTrack(playlist.id, track.id)}>
+                      <SongCover videoId={track.videoId} title={track.title} className="cover-tile music-playlist-avatar" />
+                      <span className="music-playlist-name">{track.title}</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="icon-button"
+                      aria-label="Remove"
+                      onClick={() => music.removeTrack(playlist.id, track.id)}
+                    >
+                      <X className="player-icon" aria-hidden="true" />
+                    </button>
+                    {music.unavailableIds.includes(track.id) ? (
+                      <p className="calculator-error" role="alert">
+                        This video is unavailable.
+                      </p>
+                    ) : null}
+                  </li>
+                ))}
               </ul>
             )}
           </>

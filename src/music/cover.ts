@@ -8,6 +8,11 @@ function hashTitle(title: string) {
   return hash
 }
 
+export function thumbnailUrl(videoId: string) {
+  if (!videoId) return ''
+  return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
+}
+
 export function coverFromTitle(title: string) {
   const words = title.trim().split(/\s+/).filter(Boolean)
   const initials =

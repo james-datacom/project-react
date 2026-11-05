@@ -850,9 +850,16 @@ button.nav-link {
 .cover-tile {
   display: grid;
   place-items: center;
+  overflow: hidden;
   border-radius: 8px;
   color: #fff;
   font-weight: 700;
+}
+
+.cover-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .cover-tile-sm {

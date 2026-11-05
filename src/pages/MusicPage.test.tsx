@@ -43,7 +43,7 @@ describe('Music page', () => {
     expect(html).toContain('Search music')
     expect(html).toContain('Add playlist')
     expect(html).toContain('Playlist actions')
-    expect(html).toContain('Save Playlist')
+    expect(html).toContain('Export Playlist')
     expect(html).toContain('Import Playlist')
     expect(html).toContain('accept="application/json,.json"')
     expect(html).toContain('data-playback="idle"')

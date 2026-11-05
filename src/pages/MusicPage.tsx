@@ -1,4 +1,4 @@
-import { ChevronLeft, EllipsisVertical, Pencil, Play, Plus, Search, Trash2, X } from 'lucide-react'
+import { ChevronLeft, Download, EllipsisVertical, Pencil, Play, Plus, Search, Trash2, Upload, X } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { PlaylistCover } from '../music/PlaylistCover.tsx'
@@ -143,9 +143,11 @@ function PlaylistLibrary() {
               </button>
               <div id="playlist-actions" className="playlist-menu-list" role="menu" hidden={!menuOpen}>
                 <button type="button" role="menuitem" onClick={savePlaylists}>
-                  Save Playlist
+                  <Download className="player-icon" aria-hidden="true" />
+                  Export Playlist
                 </button>
                 <button type="button" role="menuitem" onClick={() => fileRef.current?.click()}>
+                  <Upload className="player-icon" aria-hidden="true" />
                   Import Playlist
                 </button>
               </div>

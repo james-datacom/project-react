@@ -1,6 +1,7 @@
 import { ChevronLeft, Download, EllipsisVertical, Pencil, Play, Plus, Search, Trash2, Upload, X } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import { CreatePlaylistDialog } from '../music/CreatePlaylistDialog.tsx'
 import { PlaylistCover } from '../music/PlaylistCover.tsx'
 import { SongCover } from '../music/SongCover.tsx'
 import type { Library, Playlist } from '../music/library.ts'
@@ -41,8 +42,6 @@ function downloadLibrary(library: Library) {
 function PlaylistLibrary() {
   const music = useMusic()
   const [dialog, setDialog] = useState<DialogKind>(null)
-  const [name, setName] = useState('')
-  const [formError, setFormError] = useState('')
   const [importError, setImportError] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -73,24 +72,11 @@ function PlaylistLibrary() {
   }, [menuOpen])
 
   function openCreate() {
-    setName('')
-    setFormError('')
     setDialog('create')
   }
 
   function closeDialog() {
     setDialog(null)
-    setFormError('')
-  }
-
-  function submitPlaylist(event: FormEvent) {
-    event.preventDefault()
-    const error = music.createPlaylist(name)
-    if (error) {
-      setFormError(error)
-      return
-    }
-    closeDialog()
   }
 
   function savePlaylists() {
@@ -200,30 +186,7 @@ function PlaylistLibrary() {
         )}
       </section>
       <PlayerColumn narrow={narrow} />
-      {dialog === 'create' ? (
-        <MusicDialog onClose={closeDialog}>
-          <form onSubmit={submitPlaylist}>
-            <h2 className="panel-title">New playlist</h2>
-            <label className="calculator-field">
-              Name
-              <input value={name} onChange={(event) => setName(event.target.value)} />
-            </label>
-            {formError ? (
-              <p className="calculator-error" role="alert">
-                {formError}
-              </p>
-            ) : null}
-            <div className="calculator-actions">
-              <button type="submit" className="calculator-submit">
-                Save
-              </button>
-              <button type="button" className="calculator-reset" onClick={closeDialog}>
-                Cancel
-              </button>
-            </div>
-          </form>
-        </MusicDialog>
-      ) : null}
+      {dialog === 'create' ? <CreatePlaylistDialog onClose={closeDialog} /> : null}
     </div>
   )
 }

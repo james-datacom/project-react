@@ -1,4 +1,5 @@
 export const musicPath = '/entertainment/music'
+export const musicSearchPath = `${musicPath}/search`
 
 export function playlistPath(playlistId: string) {
   return `${musicPath}/${playlistId}`

@@ -3,7 +3,7 @@ import { coverFromTitle } from './cover.ts'
 import { SongCover } from './SongCover.tsx'
 import { useMusic } from './MusicProvider.tsx'
 
-export function MiniPlayer({ wideMusic }: { wideMusic: boolean }) {
+export function MiniPlayer({ wideMusic, raised = false }: { wideMusic: boolean; raised?: boolean }) {
   const music = useMusic()
   const session = music.session
   if (!session) return null
@@ -24,7 +24,7 @@ export function MiniPlayer({ wideMusic }: { wideMusic: boolean }) {
 
   return (
     <div
-      className="mini-player"
+      className={raised ? 'mini-player is-raised' : 'mini-player'}
       style={{ background: `color-mix(in srgb, ${cover.color} 68%, #140810)` }}
     >
       <div className="mini-player-progress" aria-hidden="true" style={{ width: `${progress}%` }} />

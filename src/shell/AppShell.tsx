@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router'
 import { PlayerChrome } from '../music/PlayerChrome.tsx'
 import { MusicProvider, useMusic } from '../music/MusicProvider.tsx'
+import { isMusicRoute } from '../music/paths.ts'
 import { Header } from './Header.tsx'
 import { Sidebar } from './Sidebar.tsx'
 import { useNarrow } from './useNarrow.ts'
@@ -57,12 +58,14 @@ function ShellFrame({
   onClose: () => void
 }) {
   const { session } = useMusic()
+  const onMusic = isMusicRoute(useLocation().pathname)
 
   return (
     <div
       className="shell"
       data-sidebar-open={overlayOpen ? 'true' : 'false'}
       data-player={session ? 'true' : 'false'}
+      data-music-nav={onMusic ? 'true' : 'false'}
     >
       <Sidebar hidden={narrow && !sidebarOpen} />
       {overlayOpen ? (

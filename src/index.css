@@ -12,6 +12,7 @@
   --shell-sidebar: 240px;
   --shell-break: 48rem;
   --header-height: 4rem;
+  --music-tab-height: 4.25rem;
 
   color-scheme: dark;
   font: 16px/1.45 system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -120,6 +121,14 @@ a {
 
 .shell[data-player='true'] .shell-body {
   padding-bottom: calc(4.75rem + env(safe-area-inset-bottom));
+}
+
+.shell[data-music-nav='true'] .shell-body {
+  padding-bottom: calc(var(--music-tab-height) + env(safe-area-inset-bottom));
+}
+
+.shell[data-music-nav='true'][data-player='true'] .shell-body {
+  padding-bottom: calc(var(--music-tab-height) + 4.75rem + env(safe-area-inset-bottom));
 }
 
 .header-start {
@@ -724,6 +733,7 @@ button.nav-link {
 }
 
 .music-dialog {
+  z-index: 5;
   width: min(28rem, calc(100% - 2rem));
   height: fit-content;
   max-height: 100dvh;
@@ -755,6 +765,10 @@ button.nav-link {
   pointer-events: none;
 }
 
+.shell[data-music-nav='true'] .player-unavailable {
+  bottom: calc(var(--music-tab-height) + 5rem + env(safe-area-inset-bottom));
+}
+
 .player-unavailable {
   position: fixed;
   z-index: 6;
@@ -767,6 +781,58 @@ button.nav-link {
   border-radius: 8px;
   background: var(--surface);
   color: var(--text);
+}
+
+.mini-player.is-raised {
+  bottom: calc(var(--music-tab-height) + env(safe-area-inset-bottom));
+  padding-bottom: 0.45rem;
+}
+
+.music-tab-bar {
+  position: fixed;
+  z-index: 3;
+  right: 0;
+  bottom: 0;
+  left: var(--shell-sidebar);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  height: calc(var(--music-tab-height) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.music-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  padding: 0.35rem 0.25rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 0.7rem;
+  font-weight: 650;
+  line-height: 1.1;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.music-tab[aria-current='page'] {
+  color: var(--text);
+}
+
+.music-tab-icon {
+  width: 1.45rem;
+  height: 1.45rem;
+  fill: none;
+  stroke: currentColor;
 }
 
 .mini-player {
@@ -1150,7 +1216,8 @@ button.nav-link {
   }
 
   .mini-player,
-  .now-playing-sheet {
+  .now-playing-sheet,
+  .music-tab-bar {
     left: 0;
   }
 

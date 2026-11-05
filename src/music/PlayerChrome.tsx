@@ -3,6 +3,7 @@ import { useLocation } from 'react-router'
 import { useNarrow } from '../shell/useNarrow.ts'
 import { AudioEngine } from './AudioEngine.tsx'
 import { MiniPlayer } from './MiniPlayer.tsx'
+import { MusicTabBar } from './MusicTabBar.tsx'
 import { NowPlaying } from './NowPlaying.tsx'
 import { useMusic } from './MusicProvider.tsx'
 import { isMusicRoute } from './paths.ts'
@@ -23,7 +24,8 @@ export function PlayerChrome() {
   return (
     <>
       <AudioEngine />
-      {music.session ? <MiniPlayer wideMusic={wideMusic} /> : null}
+      {music.session ? <MiniPlayer wideMusic={wideMusic} raised={onMusic} /> : null}
+      {onMusic ? <MusicTabBar /> : null}
       {music.session && music.nowPlayingOpen && !wideMusic ? <NowPlaying presentation="sheet" /> : null}
     </>
   )

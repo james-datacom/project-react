@@ -907,6 +907,19 @@ button.nav-link {
   font-size: 0.8rem;
 }
 
+.cover-tile.song-avatar {
+  border-radius: 50%;
+}
+
+/* hqdefault is a 4:3 image with the 16:9 frame letterboxed. Zoom so those bars sit outside the circle. */
+.cover-tile.song-avatar img {
+  transform: scale(1.35);
+}
+
+.playlist-avatar-group .playlist-avatar-cell {
+  border-radius: 0;
+}
+
 .cover-tile-lg {
   width: min(100%, 18rem);
   aspect-ratio: 1;

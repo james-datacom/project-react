@@ -16,7 +16,7 @@ export function SongCover({
   const showImage = Boolean(src) && failedId !== videoId
 
   return (
-    <span className={className} style={showImage ? undefined : { background: cover.color }} aria-hidden="true">
+    <span className={`${className} song-avatar`} style={showImage ? undefined : { background: cover.color }} aria-hidden="true">
       {showImage ? <img src={src} alt="" onError={() => setFailedId(videoId)} /> : cover.initials}
     </span>
   )

@@ -122,6 +122,48 @@ export function addTrack(library: Library, playlistId: string, track: TrackDraft
   return { ok: true, library: { playlists } }
 }
 
+export const SAVED_SONGS_PLAYLIST_ID = 'search-saved'
+
+export function saveSearchedSong(
+  library: Library,
+  song: { videoId: string; title: string; trackId: string; now: string },
+): Library {
+  const alreadySaved = library.playlists.some((playlist) =>
+    playlist.tracks.some((track) => track.videoId === song.videoId),
+  )
+  if (alreadySaved) return library
+  const track: Track = {
+    id: song.trackId,
+    youtubeUrl: `https://www.youtube.com/watch?v=${song.videoId}`,
+    videoId: song.videoId,
+    title: song.title,
+    addedAt: song.now,
+  }
+  const saved = library.playlists.find((playlist) => playlist.id === SAVED_SONGS_PLAYLIST_ID)
+  if (!saved) {
+    return {
+      playlists: [
+        ...library.playlists,
+        {
+          id: SAVED_SONGS_PLAYLIST_ID,
+          name: 'Saved songs',
+          description: '',
+          createdAt: song.now,
+          updatedAt: song.now,
+          tracks: [track],
+        },
+      ],
+    }
+  }
+  return {
+    playlists: library.playlists.map((playlist) =>
+      playlist.id === SAVED_SONGS_PLAYLIST_ID
+        ? { ...playlist, updatedAt: song.now, tracks: [...playlist.tracks, track] }
+        : playlist,
+    ),
+  }
+}
+
 export function removeTrack(library: Library, playlistId: string, trackId: string, now: string): LibraryResult {
   let found = false
   let removed = false

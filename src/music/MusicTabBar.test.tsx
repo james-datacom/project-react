@@ -6,6 +6,8 @@ import { MusicProvider } from './MusicProvider.tsx'
 import { MusicTabBar } from './MusicTabBar.tsx'
 import { musicPath, musicSearchPath } from './paths.ts'
 import { MusicSearchPage } from '../pages/MusicSearchPage.tsx'
+import { Header } from '../shell/Header.tsx'
+import { ThemeProvider } from '../theme/ThemeProvider.tsx'
 import type { LibraryStorage } from './storage.ts'
 
 function memoryStorage(): LibraryStorage {
@@ -50,17 +52,26 @@ describe('music tab bar', () => {
     expect(html.indexOf('aria-current="page"')).toBeLessThan(html.indexOf('>Search<'))
   })
 
-  it('leaves the search page empty and marks Search current', () => {
+  it('shows the search field and marks Search current', () => {
+    const storage = memoryStorage()
     const html = renderToStaticMarkup(
       <MemoryRouter initialEntries={[musicSearchPath]}>
-        <MusicProvider storage={memoryStorage()}>
-          <MusicSearchPage />
-          <MusicTabBar />
-        </MusicProvider>
+        <ThemeProvider>
+          <MusicProvider storage={storage}>
+            <Header menuOpen={false} showMenuButton={false} onMenuToggle={() => undefined} />
+            <MusicSearchPage recentsStorage={storage} />
+            <MusicTabBar />
+          </MusicProvider>
+        </ThemeProvider>
       </MemoryRouter>,
     )
 
     expect(html).toContain('aria-label="Search"')
+    expect(html).toContain('placeholder="What do you want to listen to?"')
+    expect(html).toContain('disabled=""')
+    expect(html).toContain('>Cancel<')
+    expect(html).toContain('This page is under construction')
+    expect(html).toContain('<h1 class="page-title">Search</h1>')
     expect(html).not.toContain('No playlists yet.')
     expect(html).not.toContain('New playlist')
     const search = html.indexOf(`href="${musicSearchPath}"`)

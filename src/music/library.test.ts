@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
 import {
   addTrack,
   createPlaylist,
   deletePlaylist,
   emptyLibrary,
   removeTrack,
+  saveSearchedSong,
   updatePlaylist,
   type Library,
 } from './library.ts'
+import { loadLibrary, MUSIC_LIBRARY_KEY, saveLibrary, type LibraryStorage } from './storage.ts'
 
 const now = '2026-11-03T00:00:00.000Z'
 const later = '2026-11-03T01:00:00.000Z'
@@ -143,5 +146,83 @@ describe('playlist library', () => {
     expect(removed.ok).toBe(true)
     if (!removed.ok) return
     expect(removed.library.playlists[0].tracks.map((track) => track.id)).toEqual(['t2'])
+  })
+
+  it('saves a searched song once on Saved songs and reloads it', () => {
+    let savedRaw: string | null = null
+    const storage: LibraryStorage = {
+      getItem: (key) => (key === MUSIC_LIBRARY_KEY ? savedRaw : null),
+      setItem: (key, value) => {
+        if (key === MUSIC_LIBRARY_KEY) savedRaw = value
+      },
+    }
+    const song = {
+      videoId: 'dQw4w9WgXcQ',
+      title: 'King of Kings',
+      trackId: 'track-1',
+      now,
+    }
+    const first = saveSearchedSong(emptyLibrary, song)
+    expect(first.playlists).toHaveLength(1)
+    expect(first.playlists[0]).toMatchObject({
+      id: 'search-saved',
+      name: 'Saved songs',
+      description: '',
+      createdAt: now,
+      updatedAt: now,
+    })
+    expect(first.playlists[0].tracks[0]).toEqual({
+      id: 'track-1',
+      youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      videoId: 'dQw4w9WgXcQ',
+      title: 'King of Kings',
+      addedAt: now,
+    })
+    const again = saveSearchedSong(first, { ...song, trackId: 'track-2' })
+    expect(again).toBe(first)
+    expect(again.playlists[0].tracks).toHaveLength(1)
+
+    const elsewhere: Library = {
+      playlists: [
+        {
+          id: 'p1',
+          name: 'Focus',
+          description: '',
+          createdAt: now,
+          updatedAt: now,
+          tracks: [
+            {
+              id: 't1',
+              youtubeUrl: 'https://www.youtube.com/watch?v=abcdefghijk',
+              videoId: 'abcdefghijk',
+              title: 'Already here',
+              addedAt: now,
+            },
+          ],
+        },
+      ],
+    }
+    const copied = saveSearchedSong(elsewhere, {
+      videoId: 'abcdefghijk',
+      title: 'Already here',
+      trackId: 'track-3',
+      now: later,
+    })
+    expect(copied).toBe(elsewhere)
+    expect(copied.playlists[0].tracks).toEqual(elsewhere.playlists[0].tracks)
+
+    saveLibrary(storage, first)
+    expect(loadLibrary(storage).playlists[0].tracks[0]).toMatchObject({
+      title: 'King of Kings',
+      videoId: 'dQw4w9WgXcQ',
+    })
+
+    const providerSource = readFileSync(new URL('./MusicProvider.tsx', import.meta.url), 'utf8')
+    const start = providerSource.indexOf('saveSearchedSong: (videoId, title)')
+    const body = providerSource.slice(start, providerSource.indexOf('removeTrack:', start))
+    expect(body).toContain('commit(')
+    expect(body).not.toContain('playPlaylist')
+    expect(body).not.toContain('playTrack')
+    expect(body).not.toContain('issue')
   })
 })

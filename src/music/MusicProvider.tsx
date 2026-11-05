@@ -4,6 +4,7 @@ import {
   createPlaylist as createPlaylistRecord,
   deletePlaylist as deletePlaylistRecord,
   removeTrack as removeTrackRecord,
+  saveSearchedSong as saveSearchedSongRecord,
   updatePlaylist as updatePlaylistRecord,
   type Library,
 } from './library.ts'
@@ -62,6 +63,7 @@ type MusicContextValue = {
     playlistId: string,
     track: { youtubeUrl: string; videoId: string; title: string },
   ) => string | null
+  saveSearchedSong: (videoId: string, title: string) => void
   removeTrack: (playlistId: string, trackId: string) => void
   playPlaylist: (playlistId: string) => void
   playTrack: (playlistId: string, trackId: string) => void
@@ -301,6 +303,16 @@ export function MusicProvider({
         if (!result.ok) return result.error
         commit(result.library)
         return null
+      },
+      saveSearchedSong: (videoId, title) => {
+        const next = saveSearchedSongRecord(libraryRef.current, {
+          videoId,
+          title,
+          trackId: crypto.randomUUID(),
+          now: new Date().toISOString(),
+        })
+        if (next === libraryRef.current) return
+        commit(next)
       },
       removeTrack: (playlistId, trackId) => {
         const result = removeTrackRecord(

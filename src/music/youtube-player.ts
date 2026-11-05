@@ -10,6 +10,31 @@ export type PlayerHandle = {
   getDuration: () => number
 }
 
+const PLAYER_ENDED = 0
+const PLAYER_PLAYING = 1
+const PLAYER_CUED = 5
+
+export function playbackStarted(state: number, started: boolean) {
+  return started || state === PLAYER_PLAYING
+}
+
+export function trackEnded(state: number, started: boolean) {
+  return state === PLAYER_ENDED && started
+}
+
+export function playFromCue(state: number, wantsPlay: boolean) {
+  return wantsPlay && state === PLAYER_CUED
+}
+
+export function initialPlaybackVideo(
+  command: { action: string; videoId: string } | null,
+  paused: boolean,
+) {
+  if (!command || paused || !command.videoId) return ''
+  if (command.action !== 'load' && command.action !== 'seek-start') return ''
+  return command.videoId
+}
+
 type YouTubePlayer = PlayerHandle & {
   destroy: () => void
 }
@@ -21,7 +46,9 @@ type YouTubeNamespace = {
 type YouTubePlayerOptions = {
   width?: string
   height?: string
+  videoId?: string
   playerVars?: {
+    autoplay?: number
     controls: number
     rel: number
     playsinline: number
@@ -66,13 +93,16 @@ export function loadYouTubeIframeApi() {
 export function createYouTubePlayer(
   element: HTMLElement,
   events: NonNullable<YouTubePlayerOptions['events']>,
+  videoId = '',
 ) {
   const youtubeWindow = window as YouTubeWindow
   if (!youtubeWindow.YT?.Player) throw new Error('YouTube player is not loaded')
   return new youtubeWindow.YT.Player(element, {
     width: '100%',
     height: '100%',
+    ...(videoId ? { videoId } : {}),
     playerVars: {
+      ...(videoId ? { autoplay: 1 } : {}),
       controls: 0,
       rel: 0,
       playsinline: 1,

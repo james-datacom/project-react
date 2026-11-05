@@ -11,19 +11,20 @@ export function PlayerChrome() {
   const location = useLocation()
   const narrow = useNarrow()
   const music = useMusic()
-  const wideMusic = isMusicRoute(location.pathname) && !narrow
+  const onMusic = isMusicRoute(location.pathname)
+  const wideMusic = onMusic && !narrow
 
   useEffect(() => {
     if (wideMusic && music.nowPlayingOpen) music.closeNowPlaying()
   }, [music, wideMusic])
 
-  if (!music.session) return null
+  if (!onMusic && !music.session) return null
 
   return (
     <>
       <AudioEngine />
-      <MiniPlayer wideMusic={wideMusic} />
-      {music.nowPlayingOpen && !wideMusic ? <NowPlaying presentation="sheet" /> : null}
+      {music.session ? <MiniPlayer wideMusic={wideMusic} /> : null}
+      {music.session && music.nowPlayingOpen && !wideMusic ? <NowPlaying presentation="sheet" /> : null}
     </>
   )
 }

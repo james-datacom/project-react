@@ -1,12 +1,16 @@
 name: Deploy to GitHub Pages
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
   contents: read
   pages: write
   id-token: write
+  administration: write
 
 concurrency:
   group: pages
@@ -16,6 +20,34 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Publish with GitHub Actions
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # A branch source rebuilds main with Jekyll on every push and replaces the live site.
+          publish_with_actions() {
+            curl -sS -o /tmp/pages.json -w "%{http_code}" \
+              -X "$1" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/${{ github.repository }}/pages" \
+              -d '{"build_type":"workflow"}'
+          }
+          status=$(publish_with_actions PUT)
+          if [ "$status" = "404" ]; then
+            status=$(publish_with_actions POST)
+          fi
+          if [ "$status" = "200" ] || [ "$status" = "201" ] || [ "$status" = "204" ]; then
+            echo "GitHub Pages source is GitHub Actions."
+            exit 0
+          fi
+          echo "Could not switch Pages off the branch publisher (HTTP $status)."
+          cat /tmp/pages.json
+          echo "Set Settings → Pages → Build and deployment → Source to GitHub Actions, then rerun this workflow."
+          exit 1
+
       - name: Checkout
         uses: actions/checkout@v6
 
